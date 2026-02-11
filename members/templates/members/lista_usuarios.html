@@ -1,0 +1,50 @@
+{% extends 'members/base.html' %}
+
+{% block title %}Lista de Usuarios{% endblock %}
+
+{% block content %}
+<h1>Todos los Usuarios</h1>
+
+<div class="card">
+    {% if usuarios %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre Completo</th>
+                    <th>Correo</th>
+                    <th>Tipo</th>
+                    <th>Ciudad</th>
+                    <th>Estado</th>
+                    <th>Fecha Registro</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                <tr>
+                    <td>{{ usuario.id }}</td>
+                    <td>{{ usuario.nombres }} {{ usuario.apellido_paterno }} {{ usuario.apellido_materno }}</td>
+                    <td>{{ usuario.correo }}</td>
+                    <td>{{ usuario.id_tipo_usuario.nombre }}</td>
+                    <td>{{ usuario.ciudad|default:"N/A" }}</td>
+                    <td>
+                        <span class="badge {% if usuario.esta_activo %}badge-activo{% else %}badge-inactivo{% endif %}">
+                            {% if usuario.esta_activo %}Activo{% else %}Inactivo{% endif %}
+                        </span>
+                    </td>
+                    <td>{{ usuario.fecha_registro|date:"d/m/Y" }}</td>
+                    <td>
+                        <a href="{% url 'members:detalle_usuario' usuario.id %}" class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                            Ver detalle
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="text-align: center; padding: 2rem; color: #7f8c8d;">No hay usuarios registrados aún.</p>
+    {% endif %}
+</div>
+{% endblock %}

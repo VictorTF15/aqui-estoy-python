@@ -1,0 +1,94 @@
+{% extends 'members/base.html' %}
+
+{% block title %}{{ usuario.nombres }} {{ usuario.apellido_paterno }}{% endblock %}
+
+{% block content %}
+<h1>Detalle del Usuario</h1>
+
+<div class="card">
+    <h2>{{ usuario.nombres }} {{ usuario.apellido_paterno }} {{ usuario.apellido_materno }}</h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 2rem 0;">
+        <div>
+            <strong>Correo:</strong> {{ usuario.correo }}
+        </div>
+        <div>
+            <strong>Tipo:</strong> {{ usuario.id_tipo_usuario.nombre }}
+        </div>
+        <div>
+            <strong>Teléfono:</strong> {{ usuario.telefono|default:"N/A" }}
+        </div>
+        <div>
+            <strong>Ciudad:</strong> {{ usuario.ciudad|default:"N/A" }}
+        </div>
+        <div>
+            <strong>Estado:</strong> {{ usuario.estado|default:"N/A" }}
+        </div>
+        <div>
+            <strong>Fecha de Registro:</strong> {{ usuario.fecha_registro|date:"d/m/Y H:i" }}
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Casos como Beneficiario ({{ casos_beneficiario.count }})</h2>
+    {% if casos_beneficiario %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Estado</th>
+                    <th>Monto Objetivo</th>
+                    <th>Recaudado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for caso in casos_beneficiario %}
+                <tr>
+                    <td>{{ caso.titulo }}</td>
+                    <td>{{ caso.id_estado.nombre }}</td>
+                    <td>${{ caso.monto_objetivo }}</td>
+                    <td>${{ caso.monto_recaudado }}</td>
+                    <td>
+                        <a href="{% url 'members:detalle_caso' caso.id %}" class="btn">Ver</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No tiene casos registrados.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Donaciones Realizadas ({{ donaciones_realizadas.count }})</h2>
+    {% if donaciones_realizadas %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Caso</th>
+                    <th>Monto</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for donacion in donaciones_realizadas %}
+                <tr>
+                    <td>{{ donacion.id_caso.titulo }}</td>
+                    <td>${{ donacion.monto }}</td>
+                    <td>{{ donacion.fecha_compromiso|date:"d/m/Y" }}</td>
+                    <td>{{ donacion.estado_donacion }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No ha realizado donaciones.</p>
+    {% endif %}
+</div>
+
+<a href="{% url 'members:lista_usuarios' %}" class="btn">← Volver a la lista</a>
+{% endblock %}

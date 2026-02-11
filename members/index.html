@@ -1,0 +1,65 @@
+{% extends 'members/base.html' %}
+
+{% block title %}Inicio - Sistema de Donaciones{% endblock %}
+
+{% block content %}
+<h1>Sistema de Donaciones y Casos</h1>
+
+<div class="stats">
+    <div class="stat-card stat-card-1">
+        <h3>{{ total_casos }}</h3>
+        <p>Casos Totales</p>
+    </div>
+    
+    <div class="stat-card stat-card-2">
+        <h3>{{ total_usuarios }}</h3>
+        <p>Usuarios Registrados</p>
+    </div>
+    
+    <div class="stat-card stat-card-3">
+        <h3>{{ total_donaciones }}</h3>
+        <p>Donaciones Realizadas</p>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Casos Recientes</h2>
+    
+    {% if casos_recientes %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Título</th>
+                    <th>Beneficiario</th>
+                    <th>Estado</th>
+                    <th>Monto Objetivo</th>
+                    <th>Recaudado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for caso in casos_recientes %}
+                <tr>
+                    <td>{{ caso.id }}</td>
+                    <td>{{ caso.titulo }}</td>
+                    <td>{{ caso.id_beneficiario.nombres }} {{ caso.id_beneficiario.apellido_paterno }}</td>
+                    <td>{{ caso.id_estado.nombre }}</td>
+                    <td>${{ caso.monto_objetivo }}</td>
+                    <td>${{ caso.monto_recaudado }}</td>
+                    <td>
+                        <a href="{% url 'members:detalle_caso' caso.id %}" class="btn">Ver detalle</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay casos registrados aún.</p>
+    {% endif %}
+</div>
+
+<div style="text-align: center; margin-top: 2rem;">
+    <a href="{% url 'members:lista_casos' %}" class="btn">Ver todos los casos</a>
+</div>
+{% endblock %}

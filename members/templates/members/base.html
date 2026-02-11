@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Mi sitio{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{% url 'members:index' %}">Inicio</a> |
+            <a href="{% url 'members:lista_usuarios' %}">Usuarios</a> |
+            <a href="{% url 'members:lista_casos' %}">Casos</a>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>© {{ now.year }}</p>
+    </footer>
+</body>
+</html>
