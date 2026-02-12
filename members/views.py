@@ -1,11 +1,14 @@
 from django.apps import apps
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_http_methods
 from django.template.loader import select_template
 from django.template import TemplateDoesNotExist
 from django.http import HttpResponse
+from django.db.models import Sum, Count
+
+from .models import Usuarios, Casos, Donaciones, CasoCategorias, Categorias, EstadoCaso, TipoUsuario
 
 # resolución segura de modelos
 def _get_model(name):
@@ -15,8 +18,11 @@ def _get_model(name):
         return None
 
 Usuarios = _get_model('Usuarios')
-Donaciones = _get_model('Donaciones')
 Casos = _get_model('Casos')
+Donaciones = _get_model('Donaciones')
+Categorias = _get_model('Categorias')
+EstadoCaso = _get_model('EstadoCaso')
+TipoUsuario = _get_model('TipoUsuario')
 
 # Login robusto
 def login_view(request):
@@ -105,33 +111,60 @@ except Exception:
     CasoCategorias = None
 
 def feed(request):
-    """Feed principal después de login."""
+    """
+    Feed sin valores monetarios. Contextos por rol: Beneficiario, Donador, Otros.
+    """
     user_id = request.session.get('user_id')
-    usuario = None
-    if Usuarios and user_id:
-        try:
-            usuario = Usuarios.objects.get(pk=user_id)
-        except Exception:
-            usuario = None
+    usuario = Usuarios.objects.select_related('id_tipo_usuario').filter(pk=user_id).first() if Usuarios and user_id else None
 
-    casos_recientes = Casos.objects.select_related('id_estado').order_by('-fecha_creacion')[:12] if Casos else []
-    role = request.session.get('user_role', '')
+    # extraer nombre de rol si existe relación
+    role = ''
+    if usuario:
+        for attr in ('id_tipo_usuario', 'tipo_usuario', 'idTipoUsuario', 'rol', 'role'):
+            val = getattr(usuario, attr, None)
+            if val:
+                role = getattr(val, 'nombre', str(val))
+                break
 
-    if Casos:
-        if role == 'Beneficiario' and user_id:
-            historial = Casos.objects.filter(id_beneficiario_id=user_id).order_by('-fecha_creacion')[:20]
-        elif role == 'Donador' and Donaciones:
-            historial = Casos.objects.filter(donaciones__id_donador_id=user_id).distinct().order_by('-fecha_creacion')[:20]
-        else:
-            historial = Casos.objects.order_by('-fecha_creacion')[:20]
-    else:
-        historial = []
+    recientes = Casos.objects.select_related('id_estado','id_beneficiario').order_by('-fecha_creacion')[:8] if Casos else []
+    categorias = Categorias.objects.all() if Categorias else []
 
-    return render(request, 'members/feed.html', {
+    stats = {
+        'total_casos': Casos.objects.count() if Casos else 0,
+        'total_usuarios': Usuarios.objects.count() if Usuarios else 0,
+        # ahora solo contamos registros de donaciones (sin sumar montos)
+        'total_donaciones_count': Donaciones.objects.count() if Donaciones else 0,
+    }
+
+    context = {
         'usuario': usuario,
-        'casos_recientes': casos_recientes,
-        'historial': historial,
-    })
+        'role': role,
+        'recientes': recientes,
+        'categorias': categorias,
+        'stats': stats,
+    }
+
+    if role == 'Beneficiario' and Casos:
+        context['mis_casos'] = Casos.objects.filter(id_beneficiario_id=user_id).select_related('id_estado').order_by('-fecha_creacion')
+    elif role == 'Donador' and Donaciones and Casos:
+        context['mis_donaciones'] = Donaciones.objects.filter(id_donador_id=user_id).select_related('id_caso').order_by('-id')[:50]
+        # recomendados: casos abiertos (campo soft, lo intento detectar)
+        try:
+            recomendados_qs = Casos.objects.filter(esta_abierto=True).order_by('-fecha_creacion')[:8]
+        except Exception:
+            recomendados_qs = Casos.objects.order_by('-fecha_creacion')[:8]
+        context['recomendados'] = recomendados_qs
+    else:
+        # top por número de donaciones por caso (si Donaciones existe)
+        if Donaciones:
+            top = (Donaciones.objects.values('id_caso')
+                   .annotate(count=Count('id'))
+                   .order_by('-count')[:10])
+            caso_ids = [t['id_caso'] for t in top]
+            casos_top = list(Casos.objects.filter(id__in=caso_ids).select_related('id_beneficiario')) if Casos else []
+            context.update({'casos_top': casos_top, 'top_stats': top})
+
+    return render(request, 'members/feed.html', context)
 
 # Vistas mínimas requeridas por el menú (si ya existen, no sobrescribas)
 def lista_casos(request):

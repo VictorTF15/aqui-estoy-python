@@ -11,8 +11,9 @@ urlpatterns = [
     path('casos/<int:caso_id>/', views.detalle_caso, name='detalle_caso'),
     path('donaciones/', views.lista_donaciones, name='lista_donaciones'),
     path('usuarios/', views.lista_usuarios, name='lista_usuarios'),
-    path('usuarios/registro/', views.register, name='register'),   # <- asegurarse que existe
+    path('usuarios/registro/', views.register, name='register'),
     path('usuarios/login/', views.login_view, name='login'),
     path('usuarios/logout/', views.logout_view, name='logout'),
+    path('usuarios/<int:user_id>/', views.perfil_usuario, name='perfil_usuario'),
     path('categorias/', views.lista_categorias, name='lista_categorias'),
 ]

@@ -1,34 +1,74 @@
-<!doctype html>
 {% load static %}
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>{% block title %}Mi sitio{% endblock %}</title>
-    <link href="{% static 'css/main.css' %}" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}Aquí Estoy{% endblock %}</title>
+
+  <!-- Tailwind CDN (dev) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2c3e50',
+            accent: '#3498db'
+          }
+        }
+      }
+    }
+  </script>
+
+  {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-blue-50 text-sky-900 min-h-screen">
-    <header class="bg-white border-b border-blue-100">
-        <nav class="container mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="text-xl font-semibold text-sky-800">
-                <a href="{% url 'members:index' %}" class="hover:text-sky-600">Aquí Estoy</a>
-            </div>
-            <div class="space-x-4 text-sm">
-                <a href="{% url 'members:lista_usuarios' %}" class="text-sky-700 hover:text-sky-900">Usuarios</a>
-                <a href="{% url 'members:lista_casos' %}" class="text-sky-700 hover:text-sky-900">Casos</a>
-                <a href="{% url 'members:lista_donaciones' %}" class="text-sky-700 hover:text-sky-900">Donaciones</a>
-            </div>
-        </nav>
-    </header>
-
-    <main class="container mx-auto px-4 py-8">
-        {% block content %}{% endblock %}
-    </main>
-
-    <footer class="mt-8 border-t border-blue-100 bg-white">
-        <div class="container mx-auto px-4 py-4 text-sm text-sky-600 text-center">
-            © {% now "Y" %} Aquí Estoy
+<body class="bg-slate-50 text-slate-800 min-h-screen antialiased">
+  <header class="bg-primary text-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-4">
+          <a href="{% url 'members:index' %}" class="flex items-center gap-3">
+            <svg class="w-8 h-8 text-accent" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="4" fill="currentColor" /></svg>
+            <span class="font-semibold text-lg">Aquí Estoy</span>
+          </a>
+          <nav class="hidden md:flex items-center space-x-4 text-sm">
+            <a href="{% url 'members:lista_casos' %}" class="hover:text-accent transition">Casos</a>
+            <a href="{% url 'members:lista_usuarios' %}" class="hover:text-accent transition">Usuarios</a>
+            <a href="{% url 'members:lista_donaciones' %}" class="hover:text-accent transition">Donaciones</a>
+            <a href="{% url 'members:lista_categorias' %}" class="hover:text-accent transition">Categorías</a>
+            <a href="/admin/" class="hover:text-accent transition">Admin</a>
+          </nav>
         </div>
-    </footer>
+
+        <div class="flex items-center gap-3">
+          {% if request.session.user_id %}
+            <span class="hidden sm:inline text-sm">Hola, {{ request.session.user_name|default:"Usuario" }}</span>
+            <a href="{% url 'members:perfil_usuario' request.session.user_id %}" class="px-3 py-1 rounded-md bg-white/10 hover:bg-white/20 text-sm">Perfil</a>
+            <a href="{% url 'members:logout' %}" class="px-3 py-1 rounded-md bg-red-600 hover:bg-red-700 text-sm">Cerrar sesión</a>
+          {% else %}
+            <a href="{% url 'members:login' %}" class="px-3 py-1 rounded-md bg-white text-primary hover:opacity-90 text-sm">Iniciar sesión</a>
+            <a href="{% url 'members:register' %}" class="px-3 py-1 rounded-md border border-white/20 hover:bg-white/10 text-sm">Registrarse</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {% block content %}
+    {% endblock %}
+  </main>
+
+  <footer class="bg-white border-t mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-sm text-slate-500">
+      <div class="flex items-center justify-between">
+        <p>© {{ now|date:"Y" }} Aquí Estoy</p>
+        <p>Hecho con ♥</p>
+      </div>
+    </div>
+  </footer>
+
+  {% block extra_js %}{% endblock %}
 </body>
 </html>
