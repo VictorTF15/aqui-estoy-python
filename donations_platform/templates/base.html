@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Donations Platform{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{% url 'users:login' %}">Login</a> |
+            <a href="{% url 'users:register' %}">Register</a> |
+            <a href="{% url 'donations:lista_casos' %}">Casos</a> |
+            <a href="{% url 'donations:lista_donaciones' %}">Donaciones</a> |
+            <a href="{% url 'messaging:conversaciones' %}">Mensajes</a>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>© {{ now.year }} Donations Platform</p>
+    </footer>
+</body>
+</html>

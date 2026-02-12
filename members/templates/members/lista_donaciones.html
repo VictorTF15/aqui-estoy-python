@@ -1,0 +1,21 @@
+{% extends 'members/base.html' %}
+{% block title %}Donaciones{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Donaciones</h1>
+  <table>
+    <thead><tr><th>Monto</th><th>Caso</th><th>Fecha</th></tr></thead>
+    <tbody>
+      {% for d in donaciones %}
+      <tr>
+        <td>{{ d.monto }}</td>
+        <td>{% if d.id_caso %}<a href="{% url 'members:detalle_caso' d.id_caso.id %}">{{ d.id_caso.titulo }}</a>{% else %}—{% endif %}</td>
+        <td>{{ d.fecha }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3">No hay donaciones.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Hilo de Mensajes</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{% url 'messaging:conversaciones' %}">Volver a Conversaciones</a>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Hilo de Mensajes</h1>
+
+        <div class="card">
+            <h2>Conversación con {{ conversacion.usuario_destinatario }}</h2>
+            <div class="messages">
+                {% for mensaje in mensajes %}
+                    <div class="message {% if mensaje.id_emisor == user.id %}sent{% else %}received{% endif %}">
+                        <p><strong>{{ mensaje.fecha_envio|date:"d/m/Y H:i" }}:</strong> {{ mensaje.contenido }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <form method="POST" action="{% url 'messaging:enviar_mensaje' conversacion.id %}">
+            {% csrf_token %}
+            <textarea name="contenido" rows="3" placeholder="Escribe tu mensaje aquí..." required></textarea>
+            <button type="submit">Enviar</button>
+        </form>
+    </main>
+
+    <footer>
+        <p>© {{ now.year }}</p>
+    </footer>
+</body>
+</html>

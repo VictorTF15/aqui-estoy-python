@@ -3,52 +3,45 @@
 {% block title %}Lista de Casos{% endblock %}
 
 {% block content %}
-<h1>Todos los Casos</h1>
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-semibold text-sky-800">Casos</h1>
+  <a href="{% url 'members:crear_caso' %}" class="py-2 px-4 bg-sky-600 text-white rounded">Crear caso</a>
+</div>
 
-<div class="card">
-    {% if casos %}
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Título</th>
-                    <th>Beneficiario</th>
-                    <th>Estado</th>
-                    <th>Monto Objetivo</th>
-                    <th>Recaudado</th>
-                    <th>Progreso</th>
-                    <th>Fecha Creación</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for caso in casos %}
-                <tr>
-                    <td>{{ caso.id }}</td>
-                    <td>{{ caso.titulo|truncatewords:8 }}</td>
-                    <td>{{ caso.id_beneficiario.nombres }} {{ caso.id_beneficiario.apellido_paterno }}</td>
-                    <td>
-                        <span class="badge {% if caso.esta_abierto %}badge-activo{% else %}badge-inactivo{% endif %}">
-                            {{ caso.id_estado.nombre }}
-                        </span>
-                    </td>
-                    <td>${{ caso.monto_objetivo|floatformat:2 }}</td>
-                    <td>${{ caso.monto_recaudado|floatformat:2 }}</td>
-                    <td>
-                        {% widthratio caso.monto_recaudado caso.monto_objetivo 100 %}%
-                    </td>
-                    <td>{{ caso.fecha_creacion|date:"d/m/Y" }}</td>
-                    <td>
-                        <a href="{% url 'members:detalle_caso' caso.id %}" class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
-                            Ver detalle
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p style="text-align: center; padding: 2rem; color: #7f8c8d;">No hay casos registrados aún.</p>
-    {% endif %}
+<div class="bg-white shadow rounded-md overflow-hidden">
+  {% if casos %}
+    <table class="min-w-full divide-y divide-slate-100">
+      <thead class="bg-sky-50 text-left">
+        <tr>
+          <th class="px-4 py-2">ID</th>
+          <th class="px-4 py-2">Imagen</th>
+          <th class="px-4 py-2">Título</th>
+          <th class="px-4 py-2">Beneficiario</th>
+          <th class="px-4 py-2">Estado</th>
+          <th class="px-4 py-2">Creado</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-slate-100">
+        {% for caso in casos %}
+        <tr>
+          <td class="px-4 py-2">{{ caso.id }}</td>
+          <td class="px-4 py-2">
+            {% if caso.imagen1 %}
+              <img src="{{ caso.imagen1 }}" alt="{{ caso.titulo }}" class="h-12 w-20 object-cover rounded">
+            {% else %}
+              <img src="https://picsum.photos/seed/caso-{{ caso.id }}/120/80" alt="placeholder" class="h-12 w-20 object-cover rounded">
+            {% endif %}
+          </td>
+          <td class="px-4 py-2"><a class="text-sky-700 hover:underline" href="{% url 'members:detalle_caso' caso.id %}">{{ caso.titulo }}</a></td>
+          <td class="px-4 py-2">{{ caso.id_beneficiario }}</td>
+          <td class="px-4 py-2">{{ caso.id_estado }}</td>
+          <td class="px-4 py-2">{{ caso.fecha_creacion|date:"SHORT_DATETIME_FORMAT" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="p-6 text-center text-slate-500">No hay casos registrados aún.</p>
+  {% endif %}
 </div>
 {% endblock %}

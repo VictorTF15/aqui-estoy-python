@@ -1,0 +1,14 @@
+{% extends 'members/base.html' %}
+{% block title %}Categorías{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Categorías</h1>
+  <ul>
+    {% for c in categorias %}
+      <li>{{ c.nombre }}</li>
+    {% empty %}
+      <li>No hay categorías.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

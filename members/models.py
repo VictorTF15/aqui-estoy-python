@@ -130,8 +130,6 @@ class Casos(models.Model):
     esta_abierto = models.BooleanField(default=True)
     titulo = models.CharField(max_length=200)
     descripcion = models.TextField()
-    monto_objetivo = models.DecimalField(max_digits=10, decimal_places=2)
-    monto_recaudado = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     entidad = models.CharField(max_length=100, null=True, blank=True)
     direccion = models.CharField(max_length=300, null=True, blank=True)
     colonia = models.CharField(max_length=100, null=True, blank=True)

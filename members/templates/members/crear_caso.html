@@ -1,0 +1,20 @@
+{% extends 'members/base.html' %}
+{% block title %}Crear caso{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Crear caso</h1>
+  <form method="post">
+    {% csrf_token %}
+    <div style="margin-bottom:0.75rem;">
+      <label>Título</label><br>
+      <input type="text" name="titulo" required style="width:100%; padding:.5rem; margin-top:.25rem;">
+    </div>
+    <div style="margin-bottom:0.75rem;">
+      <label>Descripción</label><br>
+      <textarea name="descripcion" rows="6" style="width:100%; padding:.5rem; margin-top:.25rem;"></textarea>
+    </div>
+    <button class="btn" type="submit">Crear</button>
+    <a class="btn" href="{% url 'members:lista_casos' %}" style="background:#95a5a6; margin-left:.5rem;">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

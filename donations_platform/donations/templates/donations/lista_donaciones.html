@@ -1,0 +1,39 @@
+<!-- filepath: /donations_platform/donations_platform/donations/templates/donations/lista_donaciones.html -->
+{% extends 'base.html' %}
+
+{% block title %}Lista de Donaciones{% endblock %}
+
+{% block content %}
+<h1>Lista de Donaciones</h1>
+
+<div class="card">
+    {% if donaciones %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Caso</th>
+                    <th>Donador</th>
+                    <th>Monto</th>
+                    <th>Fecha Compromiso</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for donacion in donaciones %}
+                <tr>
+                    <td>{{ donacion.id }}</td>
+                    <td>{{ donacion.id_caso.titulo }}</td>
+                    <td>{{ donacion.id_donador.nombres }} {{ donacion.id_donador.apellido_paterno }}</td>
+                    <td>${{ donacion.monto|floatformat:2 }}</td>
+                    <td>{{ donacion.fecha_compromiso|date:"d/m/Y" }}</td>
+                    <td>{{ donacion.estado_donacion }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="text-align: center; padding: 2rem; color: #7f8c8d;">No hay donaciones registradas aún.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Detalle del Caso</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{% url 'donations:lista_casos' %}">Lista de Casos</a> |
+            <a href="{% url 'donations:lista_donaciones' %}">Lista de Donaciones</a>
+        </nav>
+    </header>
+
+    <main>
+        <h1>{{ caso.titulo }}</h1>
+        <div class="card">
+            <p><strong>Descripción:</strong> {{ caso.descripcion }}</p>
+            <p><strong>Beneficiario:</strong> {{ caso.id_beneficiario.nombres }} {{ caso.id_beneficiario.apellido_paterno }}</p>
+            <p><strong>Estado:</strong> {{ caso.id_estado.nombre }}</p>
+            <p><strong>Monto Objetivo:</strong> ${{ caso.monto_objetivo|floatformat:2 }}</p>
+            <p><strong>Monto Recaudado:</strong> ${{ caso.monto_recaudado|floatformat:2 }}</p>
+            <p><strong>Fecha de Creación:</strong> {{ caso.fecha_creacion|date:"d/m/Y" }}</p>
+            <p><strong>Fecha de Publicación:</strong> {{ caso.fecha_publicacion|date:"d/m/Y" }}</p>
+            <p><strong>Fecha de Conclusión:</strong> {{ caso.fecha_conclusion|date:"d/m/Y" }}</p>
+            <p><strong>Fecha Límite:</strong> {{ caso.fecha_limite|date:"d/m/Y" }}</p>
+        </div>
+
+        <h2>Donaciones Realizadas</h2>
+        {% if caso.donaciones.all %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Donador</th>
+                        <th>Monto</th>
+                        <th>Fecha Compromiso</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for donacion in caso.donaciones.all %}
+                    <tr>
+                        <td>{{ donacion.id_donador.nombres }} {{ donacion.id_donador.apellido_paterno }}</td>
+                        <td>${{ donacion.monto|floatformat:2 }}</td>
+                        <td>{{ donacion.fecha_compromiso|date:"d/m/Y" }}</td>
+                        <td>{{ donacion.estado_donacion }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No hay donaciones registradas para este caso.</p>
+        {% endif %}
+        
+        <a href="{% url 'donations:lista_casos' %}" class="btn">← Volver a la lista de casos</a>
+    </main>
+
+    <footer>
+        <p>© {{ now.year }}</p>
+    </footer>
+</body>
+</html>

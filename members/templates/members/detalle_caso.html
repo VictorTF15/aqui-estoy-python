@@ -1,0 +1,28 @@
+{% extends 'members/base.html' %}
+{% block title %}{{ caso.titulo }}{% endblock %}
+{% block content %}
+<div class="bg-white shadow rounded p-6">
+  <h1 class="text-2xl font-semibold mb-4">{{ caso.titulo }}</h1>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    {% for img_field in (caso.imagen1, caso.imagen2, caso.imagen3, caso.imagen4) %}
+      {% if img_field %}
+        <img src="{{ img_field }}" class="w-full h-60 object-cover rounded" alt="imagen">
+      {% else %}
+        <img src="https://picsum.photos/seed/caso-{{ caso.id }}-{{ forloop.counter }}/800/600" class="w-full h-60 object-cover rounded" alt="placeholder">
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <p class="text-slate-700 mb-4">{{ caso.descripcion }}</p>
+
+  <div class="flex items-center gap-4">
+    <div>
+      <strong>Beneficiario:</strong> {{ caso.id_beneficiario }}
+    </div>
+    <div>
+      <strong>Estado:</strong> {{ caso.id_estado }}
+    </div>
+  </div>
+</div>
+{% endblock %}

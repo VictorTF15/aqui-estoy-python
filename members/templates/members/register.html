@@ -1,0 +1,64 @@
+<!doctype html>
+{% load static %}
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Registro de Usuario</title>
+  <link href="{% static 'css/main.css' %}" rel="stylesheet">
+</head>
+<body class="bg-blue-50 min-h-screen flex items-center justify-center">
+  <div class="w-full max-w-lg mx-4">
+    <div class="bg-white shadow-lg rounded-lg ring-1 ring-sky-100 overflow-hidden">
+      <div class="p-6">
+        <h2 class="text-2xl font-semibold text-center text-sky-800 mb-4">Crear cuenta</h2>
+        <form method="post" class="space-y-4" novalidate>
+          {% csrf_token %}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-sky-700">Nombres</label>
+              <input name="nombres" type="text" required placeholder="Juan Carlos"
+                     class="mt-1 block w-full rounded-md border border-blue-100 bg-blue-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-sky-700">Apellido paterno</label>
+              <input name="apellido_paterno" type="text" required placeholder="Pérez"
+                     class="mt-1 block w-full rounded-md border border-blue-100 bg-blue-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-sky-700">Apellido materno</label>
+              <input name="apellido_materno" type="text" placeholder="Gómez"
+                     class="mt-1 block w-full rounded-md border border-blue-100 bg-blue-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-sky-700">Teléfono (opcional)</label>
+              <input name="telefono" type="text" placeholder="+52 55 5555 5555"
+                     class="mt-1 block w-full rounded-md border border-blue-100 bg-blue-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-sky-700">Correo</label>
+            <input name="correo" type="email" required placeholder="correo@ejemplo.com"
+                   class="mt-1 block w-full rounded-md border border-blue-100 bg-blue-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-sky-700">Contraseña</label>
+            <input name="contrasena" type="password" required placeholder="Mínimo 8 caracteres"
+                   class="mt-1 block w-full rounded-md border border-blue-100 bg-blue-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+          </div>
+
+          <div class="flex justify-between items-center">
+            <div class="text-sm text-sky-600">¿Ya tienes cuenta? <a href="{% url 'members:login' %}" class="text-sky-700 hover:underline">Entrar</a></div>
+            <button type="submit" class="ml-4 py-2 px-4 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-md shadow">Registrar</button>
+          </div>
+        </form>
+      </div>
+      <div class="bg-blue-50 px-6 py-3 text-center text-sm text-sky-500">
+        
+      </div>
+    </div>
+  </div>
+</body>
+</html>

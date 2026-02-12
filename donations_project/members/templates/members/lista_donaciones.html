@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Lista de Donaciones{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'members/css/styles.css' %}">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{% url 'members:index' %}">🏠 Inicio</a></li>
+            <li><a href="{% url 'members:lista_casos' %}">📋 Casos</a></li>
+            <li><a href="{% url 'members:lista_usuarios' %}">👥 Usuarios</a></li>
+            <li><a href="{% url 'members:lista_donaciones' %}">💰 Donaciones</a></li>
+            <li><a href="{% url 'members:lista_categorias' %}">🏷️ Categorías</a></li>
+            <li><a href="/admin/">⚙️ Admin</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1>Lista de Donaciones</h1>
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Donante</th>
+                        <th>Monto</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for donacion in donaciones %}
+                        <tr>
+                            <td>{{ donacion.id }}</td>
+                            <td>{{ donacion.donante }}</td>
+                            <td>{{ donacion.monto }}</td>
+                            <td>{{ donacion.fecha }}</td>
+                            <td>
+                                <span class="badge {% if donacion.estado == 'activo' %}badge-activo{% else %}badge-inactivo{% endif %}">
+                                    {{ donacion.estado }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No hay donaciones registradas.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

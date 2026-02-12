@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Lista de Casos</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{% url 'users:profile' %}">Perfil</a> |
+            <a href="{% url 'donations:lista_casos' %}">Casos</a> |
+            <a href="{% url 'donations:lista_donaciones' %}">Donaciones</a>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Todos los Casos</h1>
+
+        <div class="card">
+            {% if casos %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Título</th>
+                            <th>Beneficiario</th>
+                            <th>Estado</th>
+                            <th>Monto Objetivo</th>
+                            <th>Recaudado</th>
+                            <th>Progreso</th>
+                            <th>Fecha Creación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for caso in casos %}
+                        <tr>
+                            <td>{{ caso.id }}</td>
+                            <td>{{ caso.titulo|truncatewords:8 }}</td>
+                            <td>{{ caso.id_beneficiario.nombres }} {{ caso.id_beneficiario.apellido_paterno }}</td>
+                            <td>
+                                <span class="badge {% if caso.esta_abierto %}badge-activo{% else %}badge-inactivo{% endif %}">
+                                    {{ caso.id_estado.nombre }}
+                                </span>
+                            </td>
+                            <td>${{ caso.monto_objetivo|floatformat:2 }}</td>
+                            <td>${{ caso.monto_recaudado|floatformat:2 }}</td>
+                            <td>
+                                {% widthratio caso.monto_recaudado caso.monto_objetivo 100 %}%
+                            </td>
+                            <td>{{ caso.fecha_creacion|date:"d/m/Y" }}</td>
+                            <td>
+                                <a href="{% url 'donations:detalle_caso' caso.id %}" class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                                    Ver detalle
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p style="text-align: center; padding: 2rem; color: #7f8c8d;">No hay casos registrados aún.</p>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer>
+        <p>© {{ now.year }}</p>
+    </footer>
+</body>
+</html>

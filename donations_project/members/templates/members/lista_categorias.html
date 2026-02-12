@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Lista de Categorías{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'members/css/styles.css' %}">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{% url 'members:index' %}">🏠 Inicio</a></li>
+            <li><a href="{% url 'members:lista_casos' %}">📋 Casos</a></li>
+            <li><a href="{% url 'members:lista_usuarios' %}">👥 Usuarios</a></li>
+            <li><a href="{% url 'members:lista_donaciones' %}">💰 Donaciones</a></li>
+            <li><a href="{% url 'members:lista_categorias' %}">🏷️ Categorías</a></li>
+            <li><a href="/admin/">⚙️ Admin</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1>Lista de Categorías</h1>
+        <div class="card">
+            <ul>
+                {% for categoria in categorias %}
+                    <li>
+                        <a href="{% url 'members:detalle_categoria' categoria.id %}" class="text-sky-700">{{ categoria.nombre }}</a>
+                    </li>
+                {% empty %}
+                    <li>No hay categorías disponibles.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
