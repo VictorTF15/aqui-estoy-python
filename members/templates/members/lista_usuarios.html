@@ -1,50 +1,395 @@
 {% extends 'members/base.html' %}
-
-{% block title %}Lista de Usuarios{% endblock %}
+{% block title %}Usuarios — Aquí Estoy{% endblock %}
 
 {% block content %}
-<h1>Todos los Usuarios</h1>
-
-<div class="card">
-    {% if usuarios %}
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre Completo</th>
-                    <th>Correo</th>
-                    <th>Tipo</th>
-                    <th>Ciudad</th>
-                    <th>Estado</th>
-                    <th>Fecha Registro</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for usuario in usuarios %}
-                <tr>
-                    <td>{{ usuario.id }}</td>
-                    <td>{{ usuario.nombres }} {{ usuario.apellido_paterno }} {{ usuario.apellido_materno }}</td>
-                    <td>{{ usuario.correo }}</td>
-                    <td>{{ usuario.id_tipo_usuario.nombre }}</td>
-                    <td>{{ usuario.ciudad|default:"N/A" }}</td>
-                    <td>
-                        <span class="badge {% if usuario.esta_activo %}badge-activo{% else %}badge-inactivo{% endif %}">
-                            {% if usuario.esta_activo %}Activo{% else %}Inactivo{% endif %}
-                        </span>
-                    </td>
-                    <td>{{ usuario.fecha_registro|date:"d/m/Y" }}</td>
-                    <td>
-                        <a href="{% url 'members:detalle_usuario' usuario.id %}" class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
-                            Ver detalle
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p style="text-align: center; padding: 2rem; color: #7f8c8d;">No hay usuarios registrados aún.</p>
-    {% endif %}
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">Todos los Usuarios</h1>
+    <p class="text-sm text-slate-500 mt-1">Comunidad registrada en la plataforma</p>
+  </div>
+  <button onclick="abrirModalCrear()" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-medium transition">
+    + Nuevo Usuario
+  </button>
 </div>
+
+<div class="bg-white shadow rounded-lg overflow-hidden">
+  {% if usuarios %}
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-slate-200">
+        <thead class="bg-slate-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Usuario</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Correo</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tipo</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ubicación</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Estado</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Registro</th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-slate-200">
+          {% for usuario in usuarios %}
+          <tr class="hover:bg-slate-50">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div class="h-10 w-10 flex-shrink-0">
+                  {% if usuario.imagen_perfil %}
+                    <img class="h-10 w-10 rounded-full object-cover" src="{{ usuario.imagen_perfil }}" alt="">
+                  {% else %}
+                    <div class="h-10 w-10 rounded-full bg-sky-100 flex items-center justify-center">
+                      <span class="text-sky-700 font-medium text-sm">{{ usuario.nombres|slice:":1" }}{{ usuario.apellido_paterno|slice:":1" }}</span>
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="ml-4">
+                  <div class="text-sm font-medium text-slate-900">
+                    {{ usuario.nombres }} {{ usuario.apellido_paterno }}
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+              {{ usuario.correo }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                {{ usuario.id_tipo_usuario.nombre }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+              {{ usuario.ciudad|default:"—" }}, {{ usuario.estado|default:"—" }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {% if usuario.esta_activo %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                {% if usuario.esta_activo %}Activo{% else %}Inactivo{% endif %}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+              {{ usuario.fecha_registro|date:"d/m/Y" }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <div class="flex items-center justify-center gap-2">
+                <a href="{% url 'members:perfil_usuario' usuario.id %}" 
+                   class="text-sky-600 hover:text-sky-900" title="Ver perfil">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                </a>
+                <button onclick="abrirModalEditar('{{ usuario.id }}')" 
+                        class="text-amber-600 hover:text-amber-900" title="Editar">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+                <button onclick="confirmarEliminacion('{{ usuario.id }}', '{{ usuario.nombres|escapejs }} {{ usuario.apellido_paterno|escapejs }}')"
+                        class="text-red-600 hover:text-red-900" title="Eliminar">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="p-12 text-center">
+      <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+      </svg>
+      <p class="mt-4 text-slate-500">No hay usuarios registrados aún.</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Modal Crear/Editar Usuario -->
+<div id="modalUsuario" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+  <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 my-8 max-h-[90vh] overflow-y-auto">
+    <!-- Header -->
+    <div class="sticky top-0 bg-gradient-to-r from-sky-600 to-sky-700 px-6 py-4 flex items-center justify-between">
+      <h3 id="modalTitulo" class="text-xl font-bold text-white">Nuevo Usuario</h3>
+      <button onclick="cerrarModalUsuario()" class="text-white hover:text-sky-200 transition">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Formulario -->
+    <form id="formUsuario" method="post" action="{% url 'members:crear_usuario_modal' %}" class="p-6">
+      {% csrf_token %}
+      <input type="hidden" id="usuario_id" name="usuario_id" value="">
+
+      <!-- Información Personal -->
+      <div class="mb-6">
+        <h4 class="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b"> Información Personal</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+              Nombres <span class="text-red-500">*</span>
+            </label>
+            <input type="text" id="nombres" name="nombres" required maxlength="100"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                   placeholder="Ej: Juan Carlos">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+              Apellido Paterno <span class="text-red-500">*</span>
+            </label>
+            <input type="text" id="apellido_paterno" name="apellido_paterno" required maxlength="100"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                   placeholder="Ej: Pérez">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Apellido Materno</label>
+            <input type="text" id="apellido_materno" name="apellido_materno" maxlength="100"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                   placeholder="Ej: García">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+              Correo Electrónico <span class="text-red-500">*</span>
+            </label>
+            <input type="email" id="correo" name="correo" required maxlength="150"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                   placeholder="correo@ejemplo.com">
+          </div>
+
+          <div id="campoContrasena">
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+              Contraseña <span class="text-red-500" id="asteriscoContrasena">*</span>
+            </label>
+            <input type="password" id="contrasena" name="contrasena" maxlength="255"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                   placeholder="Mínimo 8 caracteres">
+            <p class="text-xs text-slate-500 mt-1" id="helpContrasena">Deja en blanco para mantener la contraseña actual (solo al editar)</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Teléfono</label>
+            <input type="tel" id="telefono" name="telefono" maxlength="20"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                   placeholder="Ej: 5512345678">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+              Tipo de Usuario <span class="text-red-500">*</span>
+            </label>
+            <select id="id_tipo_usuario" name="id_tipo_usuario" required
+                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent">
+              <option value="">Selecciona un tipo</option>
+              {% for tipo in tipos_usuario %}
+                <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dirección -->
+      <div class="mb-6">
+        <h4 class="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b"> Dirección</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-slate-700 mb-1">Dirección Completa</label>
+            <input type="text" id="direccion" name="direccion" maxlength="300"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                   placeholder="Calle, número, referencias...">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Colonia</label>
+            <input type="text" id="colonia" name="colonia" maxlength="100"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                   placeholder="Ej: Centro">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Código Postal</label>
+            <input type="text" id="codigo_postal" name="codigo_postal" maxlength="10"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                   placeholder="Ej: 12345">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Ciudad</label>
+            <input type="text" id="ciudad" name="ciudad" maxlength="100"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                   placeholder="Ej: Ciudad de México">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Estado</label>
+            <input type="text" id="estado" name="estado" maxlength="100"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                   placeholder="Ej: CDMX">
+          </div>
+        </div>
+      </div>
+
+      <!-- Imágenes y Estado -->
+      <div class="mb-6">
+        <h4 class="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b"> Perfil e Imágenes</h4>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">URL Imagen de Perfil</label>
+            <input type="url" id="imagen_perfil" name="imagen_perfil" maxlength="500"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                   placeholder="https://ejemplo.com/foto.jpg">
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">URL INE Frontal</label>
+              <input type="url" id="imagen_ine_frontal_url" name="imagen_ine_frontal_url" maxlength="500"
+                     class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                     placeholder="https://ejemplo.com/ine-frente.jpg">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">URL INE Trasera</label>
+              <input type="url" id="imagen_ine_trasera_url" name="imagen_ine_trasera_url" maxlength="500"
+                     class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                     placeholder="https://ejemplo.com/ine-atras.jpg">
+            </div>
+          </div>
+
+          <div class="flex items-center gap-6 pt-2">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="esta_activo" name="esta_activo" checked
+                     class="w-5 h-5 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
+              <span class="text-sm font-medium text-slate-700">Usuario Activo</span>
+            </label>
+
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="verificado" name="verificado"
+                     class="w-5 h-5 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
+              <span class="text-sm font-medium text-slate-700">Verificado</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t">
+        <button type="button" onclick="cerrarModalUsuario()" 
+                class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition">
+          Cancelar
+        </button>
+        <button type="submit" 
+                class="px-6 py-2 bg-sky-600 hover:bg-sky-700 text-white font-medium rounded-lg shadow transition">
+          <span id="btnTexto">Crear Usuario</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de confirmación de eliminación -->
+<div id="modalEliminar" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-6 max-w-md mx-4">
+    <h3 class="text-lg font-semibold text-slate-800 mb-2">Confirmar Eliminación</h3>
+    <p class="text-sm text-slate-600 mb-4">¿Estás seguro de que deseas eliminar al usuario <strong id="nombreUsuario"></strong>? Esta acción no se puede deshacer.</p>
+    
+    <form id="formEliminar" method="post" action="">
+      {% csrf_token %}
+      <div class="flex justify-end gap-3">
+        <button type="button" onclick="cerrarModalEliminar()" 
+                class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition">
+          Cancelar
+        </button>
+        <button type="submit" 
+                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition">
+          Eliminar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function abrirModalCrear() {
+  document.getElementById('modalTitulo').textContent = 'Nuevo Usuario';
+  document.getElementById('btnTexto').textContent = 'Crear Usuario';
+  document.getElementById('formUsuario').action = "{% url 'members:crear_usuario_modal' %}";
+  document.getElementById('formUsuario').reset();
+  document.getElementById('usuario_id').value = '';
+  document.getElementById('contrasena').required = true;
+  document.getElementById('asteriscoContrasena').classList.remove('hidden');
+  document.getElementById('helpContrasena').classList.add('hidden');
+  document.getElementById('esta_activo').checked = true;
+  document.getElementById('modalUsuario').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function abrirModalEditar(usuarioId) {
+  document.getElementById('modalTitulo').textContent = 'Editar Usuario';
+  document.getElementById('btnTexto').textContent = 'Guardar Cambios';
+  document.getElementById('formUsuario').action = "{% url 'members:crear_usuario_modal' %}";
+  document.getElementById('usuario_id').value = usuarioId;
+  document.getElementById('contrasena').required = false;
+  document.getElementById('asteriscoContrasena').classList.add('hidden');
+  document.getElementById('helpContrasena').classList.remove('hidden');
+  
+  // Cargar datos del usuario mediante AJAX
+  fetch(`/usuarios/${usuarioId}/datos/`)
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('nombres').value = data.nombres || '';
+      document.getElementById('apellido_paterno').value = data.apellido_paterno || '';
+      document.getElementById('apellido_materno').value = data.apellido_materno || '';
+      document.getElementById('correo').value = data.correo || '';
+      document.getElementById('telefono').value = data.telefono || '';
+      document.getElementById('id_tipo_usuario').value = data.id_tipo_usuario || '';
+      document.getElementById('direccion').value = data.direccion || '';
+      document.getElementById('colonia').value = data.colonia || '';
+      document.getElementById('codigo_postal').value = data.codigo_postal || '';
+      document.getElementById('ciudad').value = data.ciudad || '';
+      document.getElementById('estado').value = data.estado || '';
+      document.getElementById('imagen_perfil').value = data.imagen_perfil || '';
+      document.getElementById('imagen_ine_frontal_url').value = data.imagen_ine_frontal_url || '';
+      document.getElementById('imagen_ine_trasera_url').value = data.imagen_ine_trasera_url || '';
+      document.getElementById('esta_activo').checked = data.esta_activo;
+      document.getElementById('verificado').checked = data.verificado;
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error al cargar los datos del usuario');
+    });
+  
+  document.getElementById('modalUsuario').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarModalUsuario() {
+  document.getElementById('modalUsuario').classList.add('hidden');
+  document.body.style.overflow = 'auto';
+}
+
+function confirmarEliminacion(userId, userName) {
+  document.getElementById('nombreUsuario').textContent = userName;
+  document.getElementById('formEliminar').action = `/usuarios/${userId}/eliminar/`;
+  document.getElementById('modalEliminar').classList.remove('hidden');
+}
+
+function cerrarModalEliminar() {
+  document.getElementById('modalEliminar').classList.add('hidden');
+}
+
+// Cerrar modales al hacer clic fuera
+document.getElementById('modalUsuario').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModalUsuario();
+});
+
+document.getElementById('modalEliminar').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModalEliminar();
+});
+</script>
 {% endblock %}

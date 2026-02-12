@@ -1,0 +1,153 @@
+{% extends 'members/base.html' %}
+{% block title %}Editar Usuario{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+  <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+    <div class="px-6 py-4 bg-amber-600">
+      <h1 class="text-2xl font-bold text-white">Editar Usuario</h1>
+      <p class="text-amber-100 text-sm mt-1">Actualiza la información del usuario</p>
+    </div>
+
+    {% if messages %}
+      <div class="px-6 py-3">
+        {% for message in messages %}
+          <div class="{% if message.tags == 'error' %}bg-red-50 text-red-800 border-red-200{% else %}bg-green-50 text-green-800 border-green-200{% endif %} border rounded px-4 py-3 mb-2">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="post" class="p-6 space-y-6">
+      {% csrf_token %}
+
+      <!-- Información Personal -->
+      <div class="space-y-4">
+        <h2 class="text-lg font-semibold text-slate-800 border-b pb-2">Información Personal</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+              Nombres <span class="text-red-500">*</span>
+            </label>
+            <input type="text" name="nombres" value="{{ usuario.nombres }}" required maxlength="50"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+              Apellido Paterno <span class="text-red-500">*</span>
+            </label>
+            <input type="text" name="apellido_paterno" value="{{ usuario.apellido_paterno }}" required maxlength="50"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Apellido Materno</label>
+            <input type="text" name="apellido_materno" value="{{ usuario.apellido_materno|default:'' }}" maxlength="50"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+              Correo Electrónico <span class="text-red-500">*</span>
+            </label>
+            <input type="email" name="correo" value="{{ usuario.correo }}" required maxlength="100"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Teléfono</label>
+            <input type="tel" name="telefono" value="{{ usuario.telefono|default:'' }}" maxlength="15"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+              Tipo de Usuario <span class="text-red-500">*</span>
+            </label>
+            <select name="id_tipo_usuario" required
+                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+              {% for tipo in tipos_usuario %}
+                <option value="{{ tipo.id }}" {% if tipo.id == usuario.id_tipo_usuario.id %}selected{% endif %}>
+                  {{ tipo.nombre }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ubicación -->
+      <div class="space-y-4">
+        <h2 class="text-lg font-semibold text-slate-800 border-b pb-2">Ubicación</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Ciudad</label>
+            <input type="text" name="ciudad" value="{{ usuario.ciudad|default:'' }}" maxlength="100"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Estado</label>
+            <input type="text" name="estado" value="{{ usuario.estado|default:'' }}" maxlength="100"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">País</label>
+            <input type="text" name="pais" value="{{ usuario.pais|default:'' }}" maxlength="100"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado del Usuario -->
+      <div class="space-y-4">
+        <h2 class="text-lg font-semibold text-slate-800 border-b pb-2">Estado</h2>
+        
+        <div class="flex items-center gap-6">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="esta_activo" {% if usuario.esta_activo %}checked{% endif %}
+                   class="w-5 h-5 text-amber-600 border-slate-300 rounded focus:ring-amber-500">
+            <span class="text-sm text-slate-700">Usuario activo</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Imagen de perfil -->
+      <div class="space-y-4">
+        <h2 class="text-lg font-semibold text-slate-800 border-b pb-2">Imagen de Perfil</h2>
+        
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">URL de Imagen</label>
+          <input type="url" name="imagen_perfil" value="{{ usuario.imagen_perfil|default:'' }}" maxlength="500"
+                 placeholder="https://ejemplo.com/foto.jpg"
+                 class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+          {% if usuario.imagen_perfil %}
+            <div class="mt-3">
+              <img src="{{ usuario.imagen_perfil }}" alt="Preview" class="w-24 h-24 rounded-full object-cover">
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t">
+        <a href="{% url 'members:lista_usuarios' %}" 
+           class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition">
+          Cancelar
+        </a>
+        <button type="submit" 
+                class="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg shadow transition">
+          Guardar Cambios
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

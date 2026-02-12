@@ -1,14 +1,37 @@
 {% extends 'members/base.html' %}
-{% block title %}Categorías{% endblock %}
+{% block title %}Categorías — Aquí Estoy{% endblock %}
+
 {% block content %}
-<div class="card">
-  <h1>Categorías</h1>
-  <ul>
-    {% for c in categorias %}
-      <li>{{ c.nombre }}</li>
-    {% empty %}
-      <li>No hay categorías.</li>
-    {% endfor %}
-  </ul>
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-slate-800">Categorías de Casos</h1>
+  <p class="text-sm text-slate-500 mt-1">Explora casos por categoría</p>
 </div>
+
+{% if categorias %}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for cat in categorias %}
+    <a href="{% url 'members:lista_casos' %}?categoria={{ cat.id }}" 
+       class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition border-l-4 border-sky-500">
+      <div class="flex items-start justify-between">
+        <div>
+          <h3 class="font-semibold text-slate-800 text-lg">{{ cat.nombre }}</h3>
+          {% if cat.descripcion %}
+            <p class="text-sm text-slate-600 mt-2">{{ cat.descripcion|truncatewords:15 }}</p>
+          {% endif %}
+        </div>
+        <svg class="w-6 h-6 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="bg-white rounded-lg shadow p-12 text-center">
+    <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+    </svg>
+    <p class="mt-4 text-slate-500">No hay categorías registradas aún.</p>
+  </div>
+{% endif %}
 {% endblock %}

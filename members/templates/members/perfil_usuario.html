@@ -1,10 +1,168 @@
 {% extends 'members/base.html' %}
-{% block title %}Perfil{% endblock %}
+{% block title %}Perfil de {{ usuario.nombres }}{% endblock %}
+
 {% block content %}
-<div class="card">
-  <h1>{{ usuario.nombres }} {{ usuario.apellido_paterno }}</h1>
-  <p><strong>Correo:</strong> {{ usuario.correo }}</p>
-  <p><strong>Teléfono:</strong> {{ usuario.telefono }}</p>
-  <p><a class="btn" href="{% url 'members:lista_casos' %}">Ver casos</a></p>
+<div class="grid gap-6 md:grid-cols-3">
+  <!-- Sidebar - Información del Usuario -->
+  <aside class="md:col-span-1">
+    <div class="bg-white p-6 rounded-lg shadow">
+      <div class="text-center mb-4">
+        {% if usuario.imagen_perfil %}
+          <img src="{{ usuario.imagen_perfil }}" alt="{{ usuario.nombres }}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover">
+        {% else %}
+          <div class="w-32 h-32 rounded-full mx-auto mb-4 bg-sky-100 flex items-center justify-center">
+            <span class="text-4xl text-sky-600 font-bold">{{ usuario.nombres|slice:":1" }}{{ usuario.apellido_paterno|slice:":1" }}</span>
+          </div>
+        {% endif %}
+        
+        <h2 class="text-xl font-semibold text-slate-800">{{ usuario.nombres }} {{ usuario.apellido_paterno }}</h2>
+        <p class="text-sm text-slate-500">{{ usuario.id_tipo_usuario.nombre }}</p>
+        
+        <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs {% if usuario.esta_activo %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+          {% if usuario.esta_activo %}Activo{% else %}Inactivo{% endif %}
+        </span>
+      </div>
+
+      <div class="border-t pt-4 space-y-3 text-sm">
+        <div class="flex items-start gap-2">
+          <svg class="w-5 h-5 text-slate-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          <div>
+            <p class="text-slate-500">Correo</p>
+            <p class="font-medium">{{ usuario.correo }}</p>
+          </div>
+        </div>
+
+        {% if usuario.telefono %}
+        <div class="flex items-start gap-2">
+          <svg class="w-5 h-5 text-slate-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+          <div>
+            <p class="text-slate-500">Teléfono</p>
+            <p class="font-medium">{{ usuario.telefono }}</p>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if usuario.ciudad or usuario.estado %}
+        <div class="flex items-start gap-2">
+          <svg class="w-5 h-5 text-slate-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <div>
+            <p class="text-slate-500">Ubicación</p>
+            <p class="font-medium">{{ usuario.ciudad|default:"N/A" }}, {{ usuario.estado|default:"N/A" }}</p>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="flex items-start gap-2">
+          <svg class="w-5 h-5 text-slate-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <div>
+            <p class="text-slate-500">Miembro desde</p>
+            <p class="font-medium">{{ usuario.fecha_registro|date:"d/m/Y" }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estadísticas rápidas -->
+      <div class="border-t mt-4 pt-4 grid grid-cols-2 gap-4 text-center">
+        <div>
+          <p class="text-2xl font-bold text-sky-600">{{ total_casos }}</p>
+          <p class="text-xs text-slate-500">Casos</p>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-sky-600">{{ total_donaciones }}</p>
+          <p class="text-xs text-slate-500">Donaciones</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Contenido Principal -->
+  <div class="md:col-span-2 space-y-6">
+    <!-- Casos como Beneficiario -->
+    <div class="bg-white p-6 rounded-lg shadow">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-slate-800">Casos como Beneficiario</h3>
+        <span class="text-sm text-slate-500">{{ total_casos }} caso{{ total_casos|pluralize }}</span>
+      </div>
+
+      {% if casos_beneficiario %}
+        <div class="space-y-3">
+          {% for caso in casos_beneficiario %}
+          <div class="border rounded-lg p-4 hover:bg-slate-50 transition">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <a href="{% url 'members:detalle_caso' caso.id %}" class="text-sky-700 font-medium hover:underline">
+                  {{ caso.titulo }}
+                </a>
+                <p class="text-sm text-slate-600 mt-1">{{ caso.descripcion|truncatewords:20 }}</p>
+                <div class="flex items-center gap-3 mt-2 text-xs text-slate-500">
+                  <span class="px-2 py-1 rounded {% if caso.esta_abierto %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-700{% endif %}">
+                    {{ caso.id_estado.nombre }}
+                  </span>
+                  <span>{{ caso.fecha_creacion|date:"d/m/Y" }}</span>
+                  <span>{{ caso.vistas }} vista{{ caso.vistas|pluralize }}</span>
+                </div>
+              </div>
+              {% if caso.imagen1 %}
+              <img src="{{ caso.imagen1 }}" alt="{{ caso.titulo }}" class="w-20 h-20 object-cover rounded ml-4">
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-center text-slate-500 py-8">No hay casos registrados aún.</p>
+      {% endif %}
+    </div>
+
+    <!-- Donaciones Realizadas -->
+    <div class="bg-white p-6 rounded-lg shadow">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-slate-800">Donaciones Realizadas</h3>
+        <span class="text-sm text-slate-500">{{ total_donaciones }} donación{{ total_donaciones|pluralize:"es" }}</span>
+      </div>
+
+      {% if donaciones_realizadas %}
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Caso</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Monto</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Fecha</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Estado</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-slate-200">
+              {% for donacion in donaciones_realizadas %}
+              <tr class="hover:bg-slate-50">
+                <td class="px-4 py-3">
+                  <a href="{% url 'members:detalle_caso' donacion.id_caso.id %}" class="text-sky-700 hover:underline">
+                    {{ donacion.id_caso.titulo|truncatewords:6 }}
+                  </a>
+                </td>
+                <td class="px-4 py-3 font-medium">${{ donacion.monto|floatformat:2 }}</td>
+                <td class="px-4 py-3 text-sm text-slate-500">{{ donacion.fecha_compromiso|date:"d/m/Y" }}</td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs rounded {% if donacion.estado_donacion == 'Completada' %}bg-green-100 text-green-700{% elif donacion.estado_donacion == 'Pendiente' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">
+                    {{ donacion.estado_donacion }}
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-center text-slate-500 py-8">No ha realizado donaciones aún.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="mt-6">
+  <a href="{% url 'members:lista_usuarios' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    Volver a la lista
+  </a>
 </div>
 {% endblock %}
