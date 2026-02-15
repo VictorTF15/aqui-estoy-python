@@ -1,56 +1,61 @@
 {% extends 'members/base.html' %}
 {% block title %}Feed — Aquí Estoy{% endblock %}
 {% block content %}
+
+<div class="lg:hidden mb-6">
+  <a href="{% url 'members:mapa_casos' %}" class="flex items-center justify-center gap-3 w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-4 rounded-xl shadow-lg transition-all transform hover:scale-105">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+    </svg>
+    <span class="text-lg font-semibold">Ver Mapa de Casos</span>
+  </a>
+</div>
+
 <div class="grid gap-6 md:grid-cols-3">
   <div class="md:col-span-2 space-y-6">
-    <!-- Encabezado de bienvenida -->
-    <div class="bg-gradient-to-r from-sky-600 to-sky-700 text-white p-6 rounded-lg shadow-lg">
-      <h1 class="text-2xl font-bold">👋 Bienvenido{% if usuario %}, {{ usuario.nombres }}{% endif %}</h1>
-      <p class="text-sky-100 mt-2">
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white/20">
+    <div class="bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 text-white p-6 rounded-xl shadow-lg">
+      <h1 class="text-2xl font-bold">Bienvenido{% if usuario %}, {{ usuario.nombres }}{% endif %}</h1>
+      <p class="text-blue-100 mt-2">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white/20 backdrop-blur-sm">
           {{ role|default:"Usuario" }}
         </span>
       </p>
     </div>
 
-    <!-- ============================================ -->
-    <!-- VISTA PARA BENEFICIARIO -->
-    <!-- ============================================ -->
     {% if role == 'Beneficiario' %}
-      <!-- Estadísticas personales del beneficiario -->
-      <div class="bg-white p-6 rounded-lg shadow">
+      <div class="bg-white p-6 rounded-xl shadow-md">
         <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-           Mis Estadísticas
+          <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+          Mis Estadísticas
         </h2>
         <div class="grid grid-cols-2 gap-4">
-          <div class="p-4 bg-blue-50 rounded-lg text-center">
-            <div class="text-2xl font-bold text-blue-600">{{ stats.mis_casos_total|default:0 }}</div>
+          <div class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg text-center border border-blue-200">
+            <div class="text-2xl font-bold text-blue-700">{{ stats.mis_casos_total|default:0 }}</div>
             <div class="text-sm text-slate-600 mt-1">Casos Totales</div>
           </div>
-          <div class="p-4 bg-green-50 rounded-lg text-center">
-            <div class="text-2xl font-bold text-green-600">{{ stats.mis_casos_activos|default:0 }}</div>
+          <div class="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg text-center border border-green-200">
+            <div class="text-2xl font-bold text-green-700">{{ stats.mis_casos_activos|default:0 }}</div>
             <div class="text-sm text-slate-600 mt-1">Casos Activos</div>
           </div>
-          
         </div>
       </div>
 
-      <!-- Mis casos -->
-      <div class="bg-white p-6 rounded-lg shadow">
+      <div class="bg-white p-6 rounded-xl shadow-md">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-semibold flex items-center gap-2">
-             Mis Casos
+            <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+            Mis Casos
           </h2>
-          <a href="{% url 'members:crear_caso' %}" class="text-sm text-sky-600 hover:text-sky-700 font-medium">
-            + Nuevo Caso
+          <a href="{% url 'members:crear_caso' %}" class="text-sm text-blue-600 hover:text-blue-700 font-medium transition">
+            Nuevo Caso
           </a>
         </div>
         <ul class="space-y-3">
           {% for caso in mis_casos %}
-            <li class="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+            <li class="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-blue-300 transition">
               <div class="flex items-start justify-between">
                 <div class="flex-1">
-                  <a href="{% url 'members:detalle_caso' caso.id %}" class="font-medium text-slate-800 hover:text-sky-600">
+                  <a href="{% url 'members:detalle_caso' caso.id %}" class="font-medium text-slate-800 hover:text-blue-600 transition">
                     {{ caso.titulo }}
                   </a>
                   <p class="text-sm text-slate-500 mt-1 line-clamp-2">{{ caso.descripcion|default:"Sin descripción" }}</p>
@@ -61,7 +66,7 @@
                     <span class="text-xs text-slate-500">{{ caso.fecha_creacion|date:"d M Y" }}</span>
                   </div>
                 </div>
-                <a href="{% url 'members:editar_caso' caso.id %}" class="ml-4 text-slate-400 hover:text-sky-600">
+                <a href="{% url 'members:editar_caso' caso.id %}" class="ml-4 text-slate-400 hover:text-blue-600 transition">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                   </svg>
@@ -74,7 +79,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
               <p class="text-sm text-slate-500 mt-2">No tienes casos aún.</p>
-              <a href="{% url 'members:crear_caso' %}" class="inline-block mt-3 px-4 py-2 bg-sky-600 text-white rounded-lg text-sm hover:bg-sky-700 transition">
+              <a href="{% url 'members:crear_caso' %}" class="inline-block mt-3 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-sm hover:from-blue-700 hover:to-blue-800 transition shadow-md">
                 Crear mi primer caso
               </a>
             </li>
@@ -82,65 +87,60 @@
         </ul>
       </div>
 
-      <!-- Información adicional -->
-      <div class="bg-gradient-to-br from-blue-50 to-sky-50 p-6 rounded-lg border border-blue-200">
-        <h3 class="font-semibold text-slate-800 mb-2">💡 Consejos para Beneficiarios</h3>
+      <div class="bg-gradient-to-br from-blue-50 to-sky-50 p-6 rounded-xl border border-blue-200">
+        <h3 class="font-semibold text-slate-800 mb-2">Consejos para Beneficiarios</h3>
         <ul class="text-sm text-slate-600 space-y-2">
           <li class="flex items-start gap-2">
-            <span class="text-sky-600 mt-0.5">✓</span>
+            <span class="text-blue-600 mt-0.5 font-bold">•</span>
             <span>Agrega imágenes claras a tus casos para generar más confianza</span>
           </li>
           <li class="flex items-start gap-2">
-            <span class="text-sky-600 mt-0.5">✓</span>
+            <span class="text-blue-600 mt-0.5 font-bold">•</span>
             <span>Mantén actualizada la información de tus casos</span>
           </li>
           <li class="flex items-start gap-2">
-            <span class="text-sky-600 mt-0.5">✓</span>
+            <span class="text-blue-600 mt-0.5 font-bold">•</span>
             <span>Responde rápidamente a las consultas de los donadores</span>
           </li>
         </ul>
       </div>
 
-    <!-- ============================================ -->
-    <!-- VISTA PARA DONADOR -->
-    <!-- ============================================ -->
     {% elif role == 'Donador' %}
-      <!-- Estadísticas personales del donador -->
-      <div class="bg-white p-6 rounded-lg shadow">
+      <div class="bg-white p-6 rounded-xl shadow-md">
         <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-           Mi Impacto
+          <span class="w-2 h-2 bg-purple-600 rounded-full"></span>
+          Mi Impacto
         </h2>
         <div class="grid grid-cols-2 gap-4">
-          
-          <div class="p-4 bg-pink-50 rounded-lg text-center">
-            <div class="text-2xl font-bold text-pink-600">{{ stats.casos_apoyados|default:0 }}</div>
+          <div class="p-4 bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg text-center border border-pink-200">
+            <div class="text-2xl font-bold text-pink-700">{{ stats.casos_apoyados|default:0 }}</div>
             <div class="text-sm text-slate-600 mt-1">Casos Apoyados</div>
           </div>
-          <div class="p-4 bg-indigo-50 rounded-lg text-center">
-            <div class="text-2xl font-bold text-indigo-600">{{ stats.donaciones_realizadas|default:0 }}</div>
+          <div class="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg text-center border border-indigo-200">
+            <div class="text-2xl font-bold text-indigo-700">{{ stats.donaciones_realizadas|default:0 }}</div>
             <div class="text-sm text-slate-600 mt-1">Donaciones</div>
           </div>
         </div>
       </div>
 
-      <!-- Mis donaciones recientes -->
-      <div class="bg-white p-6 rounded-lg shadow">
+      <div class="bg-white p-6 rounded-xl shadow-md">
         <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-           Mis Donaciones Recientes
+          <span class="w-2 h-2 bg-green-600 rounded-full"></span>
+          Mis Donaciones Recientes
         </h2>
         <ul class="space-y-3">
           {% for d in mis_donaciones %}
-            <li class="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+            <li class="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-purple-300 transition">
               <div class="flex items-center justify-between">
                 <div class="flex-1">
                   <div class="text-sm text-slate-700">
                     Donaste a: 
                     {% if d.id_caso %}
-                      <a href="{% url 'members:detalle_caso' d.id_caso.id %}" class="font-medium text-sky-600 hover:text-sky-700">
+                      <a href="{% url 'members:detalle_caso' d.id_caso.id %}" class="font-medium text-purple-600 hover:text-purple-700 transition">
                         {{ d.id_caso.titulo }}
                       </a>
                     {% else %}
-                      <span class="text-slate-400">—</span>
+                      <span class="text-slate-400">Sin caso</span>
                     {% endif %}
                   </div>
                   {% if d.descripcion_donacion %}
@@ -162,7 +162,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
               <p class="text-sm text-slate-500 mt-2">No has realizado donaciones.</p>
-              <a href="{% url 'members:lista_casos' %}" class="inline-block mt-3 px-4 py-2 bg-sky-600 text-white rounded-lg text-sm hover:bg-sky-700 transition">
+              <a href="{% url 'members:lista_casos' %}" class="inline-block mt-3 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg text-sm hover:from-purple-700 hover:to-purple-800 transition shadow-md">
                 Explorar casos para donar
               </a>
             </li>
@@ -170,28 +170,28 @@
         </ul>
       </div>
 
-      <!-- Casos sugeridos para donar -->
-      <div class="bg-white p-6 rounded-lg shadow">
+      <div class="bg-white p-6 rounded-xl shadow-md">
         <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-           Casos que Puedes Apoyar
+          <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+          Casos que Puedes Apoyar
         </h2>
         <ul class="space-y-3">
           {% for c in recientes %}
-            <li class="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+            <li class="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-blue-300 transition">
               <a href="{% url 'members:detalle_caso' c.id %}" class="block">
                 <div class="flex items-start justify-between gap-4">
                   <div class="flex-1">
-                    <div class="font-medium text-slate-800 hover:text-sky-600">{{ c.titulo }}</div>
+                    <div class="font-medium text-slate-800 hover:text-blue-600 transition">{{ c.titulo }}</div>
                     <p class="text-sm text-slate-500 mt-1 line-clamp-2">{{ c.descripcion|default:"" }}</p>
                     <div class="flex items-center gap-2 mt-2">
                       <span class="text-xs text-slate-500">{{ c.fecha_creacion|date:"d M Y" }}</span>
                       {% if c.id_beneficiario %}
-                        <span class="text-xs text-slate-400">· por {{ c.id_beneficiario.nombres }}</span>
+                        <span class="text-xs text-slate-400">por {{ c.id_beneficiario.nombres }}</span>
                       {% endif %}
                     </div>
                   </div>
                   {% if c.imagen1 %}
-                    <img src="{{ c.imagen1 }}" alt="{{ c.titulo }}" class="w-16 h-16 object-cover rounded-lg">
+                    <img src="{{ c.imagen1 }}" alt="{{ c.titulo }}" class="w-16 h-16 object-cover rounded-lg border border-slate-200">
                   {% endif %}
                 </div>
               </a>
@@ -201,95 +201,88 @@
           {% endfor %}
         </ul>
         <div class="mt-4 text-center">
-          <a href="{% url 'members:lista_casos' %}" class="text-sm text-sky-600 hover:text-sky-700 font-medium">
-            Ver todos los casos →
+          <a href="{% url 'members:lista_casos' %}" class="text-sm text-blue-600 hover:text-blue-700 font-medium transition">
+            Ver todos los casos
           </a>
         </div>
       </div>
 
-      <!-- Mensaje motivacional -->
-      <div class="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-lg border border-purple-200">
-        <h3 class="font-semibold text-slate-800 mb-2">❤️ Gracias por tu Generosidad</h3>
+      <div class="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-xl border border-purple-200">
+        <h3 class="font-semibold text-slate-800 mb-2">Gracias por tu Generosidad</h3>
         <p class="text-sm text-slate-600">
           Cada donación que realizas hace una diferencia real en la vida de las personas. 
           Tu apoyo ayuda a crear comunidades más fuertes y solidarias.
         </p>
       </div>
 
-    <!-- ============================================ -->
-    <!-- VISTA PARA ADMINISTRADOR -->
-    <!-- ============================================ -->
     {% elif role == 'Administrador' %}
-      <!-- Estadísticas globales -->
-      <div class="bg-white p-6 rounded-lg shadow">
+      <div class="bg-white p-6 rounded-xl shadow-md">
         <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-           Estadísticas Globales
+          <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+          Estadísticas Globales
         </h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="p-4 bg-blue-50 rounded-lg text-center">
-            <div class="text-2xl font-bold text-blue-600">{{ stats.total_casos|default:0 }}</div>
+          <div class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg text-center border border-blue-200">
+            <div class="text-2xl font-bold text-blue-700">{{ stats.total_casos|default:0 }}</div>
             <div class="text-xs text-slate-600 mt-1">Casos Totales</div>
           </div>
-          <div class="p-4 bg-green-50 rounded-lg text-center">
-            <div class="text-2xl font-bold text-green-600">{{ stats.casos_activos|default:0 }}</div>
+          <div class="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg text-center border border-green-200">
+            <div class="text-2xl font-bold text-green-700">{{ stats.casos_activos|default:0 }}</div>
             <div class="text-xs text-slate-600 mt-1">Casos Activos</div>
           </div>
-          <div class="p-4 bg-purple-50 rounded-lg text-center">
-            <div class="text-2xl font-bold text-purple-600">{{ stats.total_usuarios|default:0 }}</div>
+          <div class="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg text-center border border-purple-200">
+            <div class="text-2xl font-bold text-purple-700">{{ stats.total_usuarios|default:0 }}</div>
             <div class="text-xs text-slate-600 mt-1">Usuarios</div>
           </div>
-          <div class="p-4 bg-amber-50 rounded-lg text-center">
-            <div class="text-2xl font-bold text-amber-600">{{ stats.total_donaciones_count|default:0 }}</div>
+          <div class="p-4 bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg text-center border border-amber-200">
+            <div class="text-2xl font-bold text-amber-700">{{ stats.total_donaciones_count|default:0 }}</div>
             <div class="text-xs text-slate-600 mt-1">Donaciones</div>
           </div>
-          <div class="p-4 bg-pink-50 rounded-lg text-center">
-            <div class="text-2xl font-bold text-pink-600">{{ stats.beneficiarios|default:0 }}</div>
+          <div class="p-4 bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg text-center border border-pink-200">
+            <div class="text-2xl font-bold text-pink-700">{{ stats.beneficiarios|default:0 }}</div>
             <div class="text-xs text-slate-600 mt-1">Beneficiarios</div>
           </div>
-          <div class="p-4 bg-indigo-50 rounded-lg text-center">
-            <div class="text-2xl font-bold text-indigo-600">{{ stats.donadores|default:0 }}</div>
+          <div class="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg text-center border border-indigo-200">
+            <div class="text-2xl font-bold text-indigo-700">{{ stats.donadores|default:0 }}</div>
             <div class="text-xs text-slate-600 mt-1">Donadores</div>
           </div>
-          
-          <div class="p-4 bg-cyan-50 rounded-lg text-center">
-            <div class="text-2xl font-bold text-cyan-600">{{ stats.casos_completados|default:0 }}</div>
+          <div class="p-4 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg text-center border border-cyan-200">
+            <div class="text-2xl font-bold text-cyan-700">{{ stats.casos_completados|default:0 }}</div>
             <div class="text-xs text-slate-600 mt-1">Completados</div>
           </div>
         </div>
       </div>
 
-      <!-- Accesos rápidos admin -->
-      <div class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-lg font-semibold mb-4"> Panel de Administración</h2>
+      <div class="bg-white p-6 rounded-xl shadow-md">
+        <h2 class="text-lg font-semibold mb-4">Panel de Administración</h2>
         <div class="grid grid-cols-2 gap-3">
-          <a href="{% url 'members:lista_usuarios' %}" class="p-4 border-2 border-slate-200 rounded-lg hover:border-sky-500 hover:bg-sky-50 transition text-center">
-            <div class="text-2xl mb-2">👥</div>
+          <a href="{% url 'members:lista_usuarios' %}" class="p-4 border-2 border-slate-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition text-center group">
+            <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">👥</div>
             <div class="text-sm font-medium">Gestionar Usuarios</div>
           </a>
-          <a href="{% url 'members:lista_casos' %}" class="p-4 border-2 border-slate-200 rounded-lg hover:border-sky-500 hover:bg-sky-50 transition text-center">
-            <div class="text-2xl mb-2">📋</div>
+          <a href="{% url 'members:lista_casos' %}" class="p-4 border-2 border-slate-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition text-center group">
+            <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">📋</div>
             <div class="text-sm font-medium">Gestionar Casos</div>
           </a>
-          <a href="{% url 'members:lista_donaciones' %}" class="p-4 border-2 border-slate-200 rounded-lg hover:border-sky-500 hover:bg-sky-50 transition text-center">
-            <div class="text-2xl mb-2">💰</div>
+          <a href="{% url 'members:lista_donaciones' %}" class="p-4 border-2 border-slate-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition text-center group">
+            <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">💰</div>
             <div class="text-sm font-medium">Ver Donaciones</div>
           </a>
-          <a href="{% url 'members:lista_categorias' %}" class="p-4 border-2 border-slate-200 rounded-lg hover:border-sky-500 hover:bg-sky-50 transition text-center">
-            <div class="text-2xl mb-2">🏷️</div>
+          <a href="{% url 'members:lista_categorias' %}" class="p-4 border-2 border-slate-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition text-center group">
+            <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🏷️</div>
             <div class="text-sm font-medium">Categorías</div>
           </a>
         </div>
       </div>
 
-      <!-- Casos recientes globales -->
-      <div class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-lg font-semibold mb-4"> Casos Recientes</h2>
+      <div class="bg-white p-6 rounded-xl shadow-md">
+        <h2 class="text-lg font-semibold mb-4">Casos Recientes</h2>
         <ul class="space-y-2">
           {% for c in recientes %}
-            <li class="p-3 border rounded hover:bg-slate-50 transition">
+            <li class="p-3 border rounded-lg hover:bg-slate-50 hover:border-blue-300 transition">
               <div class="flex items-center justify-between">
                 <div class="flex-1">
-                  <a href="{% url 'members:detalle_caso' c.id %}" class="text-sm text-slate-700 hover:text-sky-600 font-medium">
+                  <a href="{% url 'members:detalle_caso' c.id %}" class="text-sm text-slate-700 hover:text-blue-600 font-medium transition">
                     {{ c.titulo }}
                   </a>
                   <div class="flex items-center gap-2 mt-1">
@@ -298,11 +291,11 @@
                     </span>
                     <span class="text-xs text-slate-400">{{ c.fecha_creacion|date:"d M Y" }}</span>
                     {% if c.id_beneficiario %}
-                      <span class="text-xs text-slate-400">· {{ c.id_beneficiario.nombres }}</span>
+                      <span class="text-xs text-slate-400">{{ c.id_beneficiario.nombres }}</span>
                     {% endif %}
                   </div>
                 </div>
-                <a href="{% url 'members:editar_caso' c.id %}" class="text-slate-400 hover:text-sky-600 p-2">
+                <a href="{% url 'members:editar_caso' c.id %}" class="text-slate-400 hover:text-blue-600 p-2 transition">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                   </svg>
@@ -315,17 +308,14 @@
         </ul>
       </div>
 
-    <!-- ============================================ -->
-    <!-- VISTA POR DEFECTO (otros roles o sin rol) -->
-    <!-- ============================================ -->
     {% else %}
-      <div class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-lg font-semibold mb-4">📋 Casos Recientes</h2>
+      <div class="bg-white p-6 rounded-xl shadow-md">
+        <h2 class="text-lg font-semibold mb-4">Casos Recientes</h2>
         <ul class="space-y-3">
           {% for c in recientes %}
-            <li class="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+            <li class="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-blue-300 transition">
               <a href="{% url 'members:detalle_caso' c.id %}" class="block">
-                <div class="font-medium text-slate-800 hover:text-sky-600">{{ c.titulo }}</div>
+                <div class="font-medium text-slate-800 hover:text-blue-600 transition">{{ c.titulo }}</div>
                 <p class="text-sm text-slate-500 mt-1 line-clamp-2">{{ c.descripcion|default:"" }}</p>
                 <div class="flex items-center gap-2 mt-2">
                   <span class="text-xs text-slate-400">{{ c.fecha_creacion|date:"d M Y" }}</span>
@@ -340,49 +330,51 @@
     {% endif %}
   </div>
 
-  <!-- ============================================ -->
-  <!-- SIDEBAR (común para todos los roles) -->
-  <!-- ============================================ -->
   <aside class="space-y-6">
-    <!-- Acciones rápidas -->
-    <div class="bg-white p-4 rounded-lg shadow">
-      <h3 class="font-semibold mb-3"> Acciones Rápidas</h3>
+    <div class="bg-white p-4 rounded-xl shadow-md">
+      <h3 class="font-semibold mb-3">Acciones Rápidas</h3>
       <div class="flex flex-col gap-2">
         {% if role == 'Beneficiario' or role == 'Administrador' %}
-          <a href="{% url 'members:crear_caso' %}" class="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-sm text-center font-medium transition">
-            + Crear Caso
+          <a href="{% url 'members:crear_caso' %}" class="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm text-center font-medium transition shadow-sm">
+            Crear Caso
           </a>
         {% endif %}
         
-        <a href="{% url 'members:lista_casos' %}" class="px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-sm text-center font-medium transition">
+        <a href="{% url 'members:lista_casos' %}" class="px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 hover:border-blue-400 text-sm text-center font-medium transition">
           Ver Todos los Casos
+        </a>
+
+        <a href="{% url 'members:mapa_casos' %}" class="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white text-sm text-center font-medium transition shadow-sm flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+          </svg>
+          Ver Mapa
         </a>
         
         {% if role == 'Administrador' %}
-          <a href="{% url 'members:lista_usuarios' %}" class="px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-sm text-center font-medium transition">
+          <a href="{% url 'members:lista_usuarios' %}" class="px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 hover:border-blue-400 text-sm text-center font-medium transition">
             Gestionar Usuarios
           </a>
-          <a href="{% url 'members:lista_donaciones' %}" class="px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-sm text-center font-medium transition">
+          <a href="{% url 'members:lista_donaciones' %}" class="px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 hover:border-blue-400 text-sm text-center font-medium transition">
             Ver Donaciones
           </a>
         {% endif %}
         
         {% if role == 'Donador' %}
-          <a href="{% url 'members:lista_casos' %}" class="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm text-center font-medium transition">
-             Donar Ahora
+          <a href="{% url 'members:lista_casos' %}" class="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-sm text-center font-medium transition shadow-sm">
+            Donar Ahora
           </a>
         {% endif %}
       </div>
     </div>
 
-    <!-- Categorías -->
-    <div class="bg-white p-4 rounded-lg shadow">
-      <h3 class="font-semibold mb-3"> Categorías</h3>
+    <div class="bg-white p-4 rounded-xl shadow-md">
+      <h3 class="font-semibold mb-3">Categorías</h3>
       <ul class="space-y-2 text-sm">
         {% for cat in categorias %}
           <li>
-            <a href="{% url 'members:lista_casos' %}?categoria={{ cat.id }}" class="text-slate-600 hover:text-sky-600 hover:underline flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+            <a href="{% url 'members:lista_casos' %}?categoria={{ cat.id }}" class="text-slate-600 hover:text-blue-600 hover:underline flex items-center gap-2 transition">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
               {{ cat.nombre }}
             </a>
           </li>
@@ -392,15 +384,14 @@
       </ul>
     </div>
 
-    <!-- Perfil del usuario -->
     {% if usuario %}
-    <div class="bg-gradient-to-br from-sky-50 to-blue-50 p-4 rounded-lg border border-sky-200">
-      <h3 class="font-semibold text-slate-800 mb-2"> Mi Perfil</h3>
+    <div class="bg-gradient-to-br from-blue-50 to-sky-50 p-4 rounded-xl border border-blue-200 shadow-md">
+      <h3 class="font-semibold text-slate-800 mb-2">Mi Perfil</h3>
       <div class="flex items-center gap-3 mb-3">
         {% if usuario.imagen_perfil %}
-          <img src="{{ usuario.imagen_perfil }}" alt="{{ usuario.nombres }}" class="w-12 h-12 rounded-full object-cover">
+          <img src="{{ usuario.imagen_perfil }}" alt="{{ usuario.nombres }}" class="w-12 h-12 rounded-full object-cover border-2 border-blue-200">
         {% else %}
-          <div class="w-12 h-12 rounded-full bg-sky-200 flex items-center justify-center text-sky-700 font-bold text-lg">
+          <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
             {{ usuario.nombres|first }}
           </div>
         {% endif %}
@@ -409,15 +400,14 @@
           <div class="text-xs text-slate-500">{{ role }}</div>
         </div>
       </div>
-      <a href="{% url 'members:perfil_usuario' usuario.id %}" class="block text-center px-4 py-2 bg-white border border-sky-300 text-sky-700 rounded-lg text-sm font-medium hover:bg-sky-50 transition">
+      <a href="{% url 'members:perfil_usuario' usuario.id %}" class="block text-center px-4 py-2 bg-white border border-blue-300 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-50 hover:border-blue-400 transition shadow-sm">
         Ver Mi Perfil
       </a>
     </div>
     {% endif %}
 
-    <!-- Banner informativo -->
-    <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-4 rounded-lg border border-amber-200">
-      <h3 class="font-semibold text-slate-800 mb-2">💡 ¿Sabías que?</h3>
+    <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-4 rounded-xl border border-amber-200 shadow-md">
+      <h3 class="font-semibold text-slate-800 mb-2">Sabías que</h3>
       <p class="text-sm text-slate-600">
         En Aquí Estoy conectamos a personas que necesitan ayuda con quienes desean colaborar. 
         Juntos construimos una comunidad más solidaria.

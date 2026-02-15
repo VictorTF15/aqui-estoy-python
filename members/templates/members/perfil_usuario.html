@@ -3,7 +3,6 @@
 
 {% block content %}
 <div class="grid gap-6 md:grid-cols-3">
-  <!-- Sidebar - Información del Usuario -->
   <aside class="md:col-span-1">
     <div class="bg-white p-6 rounded-lg shadow">
       <div class="text-center mb-4">
@@ -14,10 +13,10 @@
             <span class="text-4xl text-sky-600 font-bold">{{ usuario.nombres|slice:":1" }}{{ usuario.apellido_paterno|slice:":1" }}</span>
           </div>
         {% endif %}
-        
+
         <h2 class="text-xl font-semibold text-slate-800">{{ usuario.nombres }} {{ usuario.apellido_paterno }}</h2>
         <p class="text-sm text-slate-500">{{ usuario.id_tipo_usuario.nombre }}</p>
-        
+
         <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs {% if usuario.esta_activo %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
           {% if usuario.esta_activo %}Activo{% else %}Inactivo{% endif %}
         </span>
@@ -61,7 +60,6 @@
         </div>
       </div>
 
-      <!-- Estadísticas rápidas -->
       <div class="border-t mt-4 pt-4 grid grid-cols-2 gap-4 text-center">
         <div>
           <p class="text-2xl font-bold text-sky-600">{{ total_casos }}</p>
@@ -75,9 +73,7 @@
     </div>
   </aside>
 
-  <!-- Contenido Principal -->
   <div class="md:col-span-2 space-y-6">
-    <!-- Casos como Beneficiario -->
     <div class="bg-white p-6 rounded-lg shadow">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold text-slate-800">Casos como Beneficiario</h3>
@@ -114,7 +110,6 @@
       {% endif %}
     </div>
 
-    <!-- Donaciones Realizadas -->
     <div class="bg-white p-6 rounded-lg shadow">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold text-slate-800">Donaciones Realizadas</h3>

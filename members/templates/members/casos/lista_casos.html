@@ -1,0 +1,783 @@
+{% extends 'members/base.html' %}
+{% block title %}Explora Casos — Aquí Estoy{% endblock %}
+
+{% block content %}
+
+
+<div class="main-container">
+    <div class="container">
+        <div class="content-wrapper">
+            <!-- Sidebar de Filtros -->
+            <aside class="filters-sidebar">
+                <div class="filters-header">
+                    <h3>
+                        <i class="fas fa-sliders-h me-2"></i>
+                        Filtros
+                    </h3>
+                    <a href="{% url 'members:lista_casos' %}" class="btn-reset">
+                        <i class="fas fa-redo"></i>
+                    </a>
+                </div>
+
+                <form method="GET" action="{% url 'members:lista_casos' %}" id="filtrosForm">
+                    <!-- Filtro de Categoría -->
+                    <div class="filter-section">
+                        <label class="filter-label">
+                            <i class="fas fa-tag"></i>
+                            Categoría
+                        </label>
+                        <select name="categoria" class="filter-select" onchange="this.form.submit()">
+                            <option value="">Todas las categorías</option>
+                            {% for cat in categorias %}
+                                <option value="{{ cat.id }}" {% if categoria_seleccionada == cat.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ cat.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Filtro de Estado -->
+                    <div class="filter-section">
+                        <label class="filter-label">
+                            <i class="fas fa-info-circle"></i>
+                            Estado del Caso
+                        </label>
+                        <select name="estado" class="filter-select" onchange="this.form.submit()">
+                            <option value="">Todos los estados</option>
+                            {% for est in estados %}
+                                <option value="{{ est.id }}" {% if estado_seleccionado == est.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ est.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Stats Rápidas -->
+                    <div class="stats-box">
+                        <div class="stat-item">
+                            <div class="stat-number">{{ casos.paginator.count|default:0 }}</div>
+                            <div class="stat-label">Casos Activos</div>
+                        </div>
+                    </div>
+
+                    <!-- Búsqueda Adicional en Sidebar -->
+                    <div class="filter-section">
+                        <label class="filter-label">
+                            <i class="fas fa-search"></i>
+                            Búsqueda Avanzada
+                        </label>
+                        <input type="text" name="buscar" class="filter-input" 
+                               placeholder="Palabra clave..." value="{{ buscar }}">
+                        <button type="submit" class="btn-apply-filters">
+                            <i class="fas fa-search me-2"></i>Aplicar Filtros
+                        </button>
+                    </div>
+                </form>
+            </aside>
+
+            <!-- Contenido Principal -->
+            <main class="cases-content">
+                <!-- Header con Resultados -->
+                <div class="results-header">
+                    <div class="results-info">
+                        <h2 class="results-title">
+                            {% if buscar or categoria_seleccionada or estado_seleccionado %}
+                                Resultados de Búsqueda
+                            {% else %}
+                                Todos los Casos
+                            {% endif %}
+                        </h2>
+                        <p class="results-count">
+                            {% if casos %}
+                                {{ casos.paginator.count }} casos encontrados
+                            {% else %}
+                                No hay casos disponibles
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="view-controls">
+                        <button class="view-btn active" id="gridView" title="Vista en cuadrícula">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button class="view-btn" id="listView" title="Vista en lista">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grid de Casos -->
+                <div class="cases-grid" id="casesGrid">
+                    {% if casos %}
+                        {% for caso in casos %}
+                        <article class="case-card">
+                            <div class="case-image-wrapper">
+                                {% if caso.imagen1 %}
+                                    <img src="{{ caso.imagen1 }}" alt="{{ caso.titulo }}" class="case-image">
+                                {% else %}
+                                    <div class="case-image-empty">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="case-badge">{{ caso.id_estado.nombre }}</div>
+                            </div>
+                            
+                            <div class="case-body">
+                                <h3 class="case-title">{{ caso.titulo }}</h3>
+                                <p class="case-description">{{ caso.descripcion|truncatewords:20 }}</p>
+                                
+                                <div class="case-meta">
+                                    <div class="meta-item">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span>{{ caso.colonia|default:"Sin ubicación" }}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="fas fa-calendar"></i>
+                                        <span>{{ caso.fecha_creacion|date:"d M Y" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="case-footer">
+                                <a href="{% url 'members:detalle_caso' caso.id %}" class="btn-view-case">
+                                    Ver Detalles
+                                    <i class="fas fa-arrow-right ms-2"></i>
+                                </a>
+                            </div>
+                        </article>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-results">
+                            <div class="empty-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <h3>No se encontraron casos</h3>
+                            <p>Intenta ajustar los filtros o realiza una nueva búsqueda</p>
+                            <a href="{% url 'members:lista_casos' %}" class="btn-clear-filters">
+                                <i class="fas fa-redo me-2"></i>Ver Todos los Casos
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Paginación Mejorada -->
+                {% if casos.has_other_pages %}
+                <nav class="pagination-wrapper" aria-label="Paginación">
+                    <ul class="pagination-list">
+                        {% if casos.has_previous %}
+                            <li>
+                                <a href="?page=1{% if buscar %}&buscar={{ buscar }}{% endif %}{% if categoria_seleccionada %}&categoria={{ categoria_seleccionada }}{% endif %}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}" 
+                                   class="pagination-btn" title="Primera página">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="?page={{ casos.previous_page_number }}{% if buscar %}&buscar={{ buscar }}{% endif %}{% if categoria_seleccionada %}&categoria={{ categoria_seleccionada }}{% endif %}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}" 
+                                   class="pagination-btn">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="pagination-info">
+                            Página <strong>{{ casos.number }}</strong> de <strong>{{ casos.paginator.num_pages }}</strong>
+                        </li>
+
+                        {% if casos.has_next %}
+                            <li>
+                                <a href="?page={{ casos.next_page_number }}{% if buscar %}&buscar={{ buscar }}{% endif %}{% if categoria_seleccionada %}&categoria={{ categoria_seleccionada }}{% endif %}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}" 
+                                   class="pagination-btn">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="?page={{ casos.paginator.num_pages }}{% if buscar %}&buscar={{ buscar }}{% endif %}{% if categoria_seleccionada %}&categoria={{ categoria_seleccionada }}{% endif %}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}" 
+                                   class="pagination-btn" title="Última página">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </main>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 6rem 0 8rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 50%);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 3rem;
+}
+
+.hero-search {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.search-input-group {
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 50px;
+    padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.search-icon {
+    color: #9ca3af;
+    margin-right: 1rem;
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    padding: 0.5rem;
+}
+
+.search-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.search-button:hover {
+    transform: scale(1.05);
+}
+
+.hero-wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    line-height: 0;
+}
+
+.hero-wave svg {
+    position: relative;
+    display: block;
+    width: calc(100% + 1.3px);
+    height: 60px;
+}
+
+.hero-wave path {
+    fill: #f9fafb;
+}
+
+/* Main Container */
+.main-container {
+    background: #f9fafb;
+    padding: 3rem 0;
+    min-height: calc(100vh - 400px);
+}
+
+.content-wrapper {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* Filters Sidebar */
+.filters-sidebar {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    position: sticky;
+    top: 100px;
+}
+
+.filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.filters-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.btn-reset {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    border-radius: 8px;
+    color: #6b7280;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.btn-reset:hover {
+    background: #667eea;
+    color: white;
+}
+
+.filter-section {
+    margin-bottom: 1.5rem;
+}
+
+.filter-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 0.5rem;
+}
+
+.filter-select, .filter-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.filter-select:focus, .filter-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.stats-box {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: white;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: rgba(255,255,255,0.9);
+}
+
+.btn-apply-filters {
+    width: 100%;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+    margin-top: 1rem;
+}
+
+.btn-apply-filters:hover {
+    transform: translateY(-2px);
+}
+
+/* Cases Content */
+.cases-content {
+    background: transparent;
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.results-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 0.25rem 0;
+}
+
+.results-count {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.view-controls {
+    display: flex;
+    gap: 0.5rem;
+    background: white;
+    padding: 0.25rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.view-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.view-btn:hover, .view-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+/* Cases Grid */
+.cases-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.case-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.case-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.2);
+}
+
+.case-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+    background: #f3f4f6;
+}
+
+.case-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.case-card:hover .case-image {
+    transform: scale(1.05);
+}
+
+.case-image-empty {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    color: #9ca3af;
+    font-size: 3rem;
+}
+
+.case-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    color: #667eea;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.case-body {
+    padding: 1.5rem;
+    flex: 1;
+}
+
+.case-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 0.75rem 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.case-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+    line-height: 1.6;
+    margin: 0 0 1rem 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.case-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: #9ca3af;
+}
+
+.meta-item i {
+    color: #667eea;
+    width: 16px;
+}
+
+.case-footer {
+    padding: 0 1.5rem 1.5rem;
+}
+
+.btn-view-case {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.875rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    transition: all 0.2s;
+}
+
+.btn-view-case:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Empty Results */
+.empty-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 16px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: #e5e7eb;
+    margin-bottom: 1.5rem;
+}
+
+.empty-results h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.empty-results p {
+    color: #6b7280;
+    margin-bottom: 2rem;
+}
+
+.btn-clear-filters {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.875rem 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: transform 0.2s;
+}
+
+.btn-clear-filters:hover {
+    transform: translateY(-2px);
+}
+
+/* Pagination */
+.pagination-wrapper {
+    margin-top: 3rem;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.pagination-list {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.pagination-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    color: #667eea;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.pagination-btn:hover {
+    background: #667eea;
+    border-color: #667eea;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.pagination-info {
+    padding: 0 1rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.pagination-info strong {
+    color: #1f2937;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .content-wrapper {
+        grid-template-columns: 1fr;
+    }
+    
+    .filters-sidebar {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .hero-section {
+        padding: 4rem 0 6rem;
+    }
+    
+    .search-input-group {
+        flex-direction: column;
+        border-radius: 16px;
+        padding: 1rem;
+    }
+    
+    .search-button {
+        width: 100%;
+        margin-top: 0.5rem;
+        border-radius: 10px;
+    }
+    
+    .cases-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .results-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+</style>
+
+<script>
+// Vista de grid/lista
+document.getElementById('gridView')?.addEventListener('click', function() {
+    const grid = document.getElementById('casesGrid');
+    grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(320px, 1fr))';
+    this.classList.add('active');
+    document.getElementById('listView')?.classList.remove('active');
+});
+
+document.getElementById('listView')?.addEventListener('click', function() {
+    const grid = document.getElementById('casesGrid');
+    grid.style.gridTemplateColumns = '1fr';
+    this.classList.add('active');
+    document.getElementById('gridView')?.classList.remove('active');
+});
+</script>
+{% endblock %}

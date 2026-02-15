@@ -11,7 +11,6 @@ class SessionAuthMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
         
-        # URLs públicas que no requieren autenticación
         self.public_urls = [
             reverse('members:login'),
             reverse('members:register'),
@@ -20,7 +19,6 @@ class SessionAuthMiddleware:
         ]
     
     def __call__(self, request):
-        # Agregar información de usuario al request si existe sesión
         if request.session.get('user_id'):
             request.user_id = request.session.get('user_id')
             request.user_name = request.session.get('user_name', '')

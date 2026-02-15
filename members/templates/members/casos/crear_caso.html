@@ -3,7 +3,6 @@
 {% block content %}
 
 <div class="max-w-4xl mx-auto">
-  <!-- Encabezado -->
   <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
     <div class="flex items-center gap-3 mb-2">
       <div class="w-12 h-12 bg-sky-100 rounded-full flex items-center justify-center">
@@ -18,7 +17,6 @@
     </div>
   </div>
 
-  <!-- Mensajes de error/éxito -->
   {% if messages %}
     <div class="mb-6 space-y-2">
       {% for message in messages %}
@@ -34,11 +32,9 @@
     </div>
   {% endif %}
 
-  <!-- Formulario -->
   <form method="post" enctype="multipart/form-data" class="space-y-6">
     {% csrf_token %}
-    
-    <!-- Sección: Información Básica -->
+
     <div class="bg-white rounded-lg shadow-sm p-6">
       <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
         <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,7 +44,6 @@
       </h2>
 
       <div class="space-y-4">
-        <!-- Título -->
         <div>
           <label for="titulo" class="block text-sm font-medium text-slate-700 mb-1">
             Título del Caso <span class="text-red-500">*</span>
@@ -65,7 +60,6 @@
           <p class="mt-1 text-xs text-slate-500">Describe brevemente tu necesidad (máximo 200 caracteres)</p>
         </div>
 
-        <!-- Descripción -->
         <div>
           <label for="descripcion" class="block text-sm font-medium text-slate-700 mb-1">
             Descripción Detallada <span class="text-red-500">*</span>
@@ -83,7 +77,6 @@
       </div>
     </div>
 
-    <!-- Sección: Ubicación -->
     <div class="bg-white rounded-lg shadow-sm p-6">
       <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
         <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,7 +87,6 @@
       </h2>
 
       <div class="grid md:grid-cols-2 gap-4">
-        <!-- Estado (Fijo: Puebla) -->
         <div>
           <label for="entidad" class="block text-sm font-medium text-slate-700 mb-1">
             Estado
@@ -110,7 +102,6 @@
           <p class="mt-1 text-xs text-slate-500">📍 Actualmente solo disponible en Puebla</p>
         </div>
 
-        <!-- Código Postal -->
         <div>
           <label for="codigo_postal" class="block text-sm font-medium text-slate-700 mb-1">
             Código Postal
@@ -126,7 +117,6 @@
           >
         </div>
 
-        <!-- Colonia -->
         <div>
           <label for="colonia" class="block text-sm font-medium text-slate-700 mb-1">
             Colonia/Localidad
@@ -141,7 +131,6 @@
           >
         </div>
 
-        <!-- Dirección -->
         <div>
           <label for="direccion" class="block text-sm font-medium text-slate-700 mb-1">
             Dirección/Referencia
@@ -158,7 +147,6 @@
       </div>
     </div>
 
-    <!-- Sección: Imágenes -->
     <div class="bg-white rounded-lg shadow-sm p-6">
       <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
         <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,13 +154,12 @@
         </svg>
         Imágenes del Caso
       </h2>
-      
+
       <p class="text-sm text-slate-600 mb-4">
         Sube imágenes que muestren tu situación. Las imágenes generan más confianza en los donadores.
       </p>
 
       <div class="grid md:grid-cols-2 gap-4">
-        <!-- Imagen 1 -->
         <div>
           <label for="imagen1" class="block text-sm font-medium text-slate-700 mb-1">
             Imagen 1 (Principal) <span class="text-red-500">*</span>
@@ -191,7 +178,6 @@
           <div id="preview1" class="mt-2"></div>
         </div>
 
-        <!-- Imagen 2 -->
         <div>
           <label for="imagen2" class="block text-sm font-medium text-slate-700 mb-1">
             Imagen 2
@@ -208,7 +194,6 @@
           <div id="preview2" class="mt-2"></div>
         </div>
 
-        <!-- Imagen 3 -->
         <div>
           <label for="imagen3" class="block text-sm font-medium text-slate-700 mb-1">
             Imagen 3
@@ -225,7 +210,6 @@
           <div id="preview3" class="mt-2"></div>
         </div>
 
-        <!-- Imagen 4 -->
         <div>
           <label for="imagen4" class="block text-sm font-medium text-slate-700 mb-1">
             Imagen 4
@@ -243,7 +227,6 @@
         </div>
       </div>
 
-      <!-- Info de imágenes -->
       <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
         <div class="flex gap-3">
           <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -262,7 +245,6 @@
       </div>
     </div>
 
-    <!-- Botones de acción -->
     <div class="bg-white rounded-lg shadow-sm p-6">
       <div class="flex flex-col sm:flex-row gap-3 justify-end">
         <a 
@@ -276,7 +258,7 @@
             Cancelar
           </span>
         </a>
-        
+
         <button 
           type="submit" 
           class="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-medium transition shadow-sm text-center"
@@ -292,7 +274,6 @@
     </div>
   </form>
 
-  <!-- Información adicional -->
   <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200 p-6 mt-6">
     <h3 class="font-semibold text-slate-800 mb-3 flex items-center gap-2">
       <svg class="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
@@ -321,13 +302,12 @@
   </div>
 </div>
 
-<!-- Script para preview de imágenes y validación -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.querySelector('form');
   const titulo = document.getElementById('titulo');
   const descripcion = document.getElementById('descripcion');
-  
+
   // Contador de caracteres para el título
   if (titulo) {
     const maxLength = titulo.getAttribute('maxlength');
@@ -335,7 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
     counterDiv.className = 'mt-1 text-xs text-slate-500 text-right';
     counterDiv.textContent = `0 / ${maxLength} caracteres`;
     titulo.parentNode.appendChild(counterDiv);
-    
+
     titulo.addEventListener('input', function() {
       const length = this.value.length;
       counterDiv.textContent = `${length} / ${maxLength} caracteres`;
@@ -344,17 +324,17 @@ document.addEventListener('DOMContentLoaded', function() {
         : 'mt-1 text-xs text-slate-500 text-right';
     });
   }
-  
+
   // Preview de imágenes
   for (let i = 1; i <= 4; i++) {
     const input = document.getElementById(`imagen${i}`);
     const preview = document.getElementById(`preview${i}`);
-    
+
     if (input && preview) {
       input.addEventListener('change', function(e) {
         const file = e.target.files[0];
         preview.innerHTML = '';
-        
+
         if (file) {
           // Validar tamaño (5MB máximo)
           if (file.size > 5 * 1024 * 1024) {
@@ -362,14 +342,14 @@ document.addEventListener('DOMContentLoaded', function() {
             input.value = '';
             return;
           }
-          
+
           // Validar tipo
           if (!file.type.match('image.*')) {
             alert('Por favor, selecciona un archivo de imagen válido.');
             input.value = '';
             return;
           }
-          
+
           // Crear preview
           const reader = new FileReader();
           reader.onload = function(e) {
@@ -377,7 +357,7 @@ document.addEventListener('DOMContentLoaded', function() {
             img.src = e.target.result;
             img.className = 'w-full h-32 object-cover rounded-lg border border-slate-200';
             preview.appendChild(img);
-            
+
             // Mostrar nombre y tamaño del archivo
             const info = document.createElement('p');
             info.className = 'text-xs text-slate-500 mt-1';
@@ -389,7 +369,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
   }
-  
+
   // Validación del formulario
   form.addEventListener('submit', function(e) {
     if (!titulo.value.trim()) {
@@ -398,14 +378,14 @@ document.addEventListener('DOMContentLoaded', function() {
       titulo.focus();
       return false;
     }
-    
+
     if (!descripcion.value.trim()) {
       e.preventDefault();
       alert('Por favor, ingresa una descripción del caso');
       descripcion.focus();
       return false;
     }
-    
+
     const imagen1 = document.getElementById('imagen1');
     if (!imagen1.files.length) {
       e.preventDefault();
@@ -413,7 +393,7 @@ document.addEventListener('DOMContentLoaded', function() {
       imagen1.focus();
       return false;
     }
-    
+
     // Confirmar envío
     if (!confirm('¿Estás seguro de crear este caso? Asegúrate de que toda la información sea correcta.')) {
       e.preventDefault();

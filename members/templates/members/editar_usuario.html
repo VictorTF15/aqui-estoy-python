@@ -22,7 +22,6 @@
     <form method="post" class="p-6 space-y-6">
       {% csrf_token %}
 
-      <!-- Información Personal -->
       <div class="space-y-4">
         <h2 class="text-lg font-semibold text-slate-800 border-b pb-2">Información Personal</h2>
         
@@ -81,7 +80,6 @@
         </div>
       </div>
 
-      <!-- Ubicación -->
       <div class="space-y-4">
         <h2 class="text-lg font-semibold text-slate-800 border-b pb-2">Ubicación</h2>
         
@@ -106,7 +104,6 @@
         </div>
       </div>
 
-      <!-- Estado del Usuario -->
       <div class="space-y-4">
         <h2 class="text-lg font-semibold text-slate-800 border-b pb-2">Estado</h2>
         
@@ -119,7 +116,6 @@
         </div>
       </div>
 
-      <!-- Imagen de perfil -->
       <div class="space-y-4">
         <h2 class="text-lg font-semibold text-slate-800 border-b pb-2">Imagen de Perfil</h2>
         
@@ -136,7 +132,6 @@
         </div>
       </div>
 
-      <!-- Botones -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t">
         <a href="{% url 'members:lista_usuarios' %}" 
            class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition">

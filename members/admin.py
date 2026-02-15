@@ -11,7 +11,6 @@ class UsuariosAdmin(admin.ModelAdmin):
     search_fields = ('nombres', 'apellido_paterno', 'correo')
     ordering = ('-fecha_registro',)
 
-# Registra modelos adicionales simples
 admin.site.register(TipoUsuario)
 admin.site.register(Categorias)
 admin.site.register(Casos)

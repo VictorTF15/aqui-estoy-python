@@ -134,6 +134,8 @@ class Casos(models.Model):
     direccion = models.CharField(max_length=300, null=True, blank=True)
     colonia = models.CharField(max_length=100, null=True, blank=True)
     codigo_postal = models.CharField(max_length=10, null=True, blank=True)
+    latitud = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    longitud = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
     fecha_creacion = models.DateTimeField(default=timezone.now)
     fecha_publicacion = models.DateTimeField(null=True, blank=True)
     fecha_conclusion = models.DateTimeField(null=True, blank=True)
@@ -153,6 +155,7 @@ class Casos(models.Model):
             models.Index(fields=['id_estado']),
             models.Index(fields=['id_beneficiario']),
             models.Index(fields=['fecha_creacion']),
+            models.Index(fields=['latitud', 'longitud']),
         ]
 
     def __str__(self):
@@ -323,7 +326,6 @@ class DocumentosOCR(models.Model):
     fecha_procesamiento = models.DateTimeField(null=True, blank=True)
     intentos_procesamiento = models.IntegerField(default=0)
     
-    # Datos extraídos del OCR
     nombre_extraido = models.CharField(max_length=200, null=True, blank=True)
     apellido_paterno_extraido = models.CharField(max_length=100, null=True, blank=True)
     apellido_materno_extraido = models.CharField(max_length=100, null=True, blank=True)
@@ -334,14 +336,12 @@ class DocumentosOCR(models.Model):
     direccion_extraida = models.CharField(max_length=300, null=True, blank=True)
     vigencia_extraida = models.CharField(max_length=10, null=True, blank=True)
     
-    # Validación y confianza
     confianza_ocr = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text='Porcentaje de confianza del OCR (0-100)')
     datos_validados = models.BooleanField(default=False)
     validado_por = models.ForeignKey(Usuarios, on_delete=models.PROTECT, null=True, blank=True, related_name='validaciones_ocr', db_column='validadoPor')
     fecha_validacion = models.DateTimeField(null=True, blank=True)
     notas_validacion = models.TextField(null=True, blank=True)
     
-    # Datos JSON completo del OCR
     respuesta_ocr_completa = models.JSONField(null=True, blank=True, help_text='Respuesta completa del servicio OCR')
 
     class Meta:
