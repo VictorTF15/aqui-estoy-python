@@ -643,7 +643,8 @@ def api_casos_mapa(request):
 
 # ============= VISTAS DE USUARIOS =============
 
-@login_required
+@login_required_session
+@role_required('Administrador')  # ← AGREGAR ESTE DECORADOR
 def lista_usuarios(request):
     """Vista para listar todos los usuarios"""
     if not Usuarios:
@@ -669,7 +670,8 @@ def lista_usuarios(request):
     return render(request, 'members/lista_usuarios.html', context)
 
 
-@login_required
+@login_required_session
+@role_required('Administrador')  # ← AGREGAR ESTE DECORADOR
 def perfil_usuario(request, user_id):
     """Vista para ver el perfil de un usuario"""
     if not Usuarios:
@@ -708,7 +710,8 @@ def perfil_usuario(request, user_id):
     return render(request, 'members/perfil_usuario.html', context)
 
 
-@login_required
+@login_required_session
+@role_required('Administrador')  # ← AGREGAR ESTE DECORADOR
 def obtener_datos_usuario(request, user_id):
     """API para obtener datos de un usuario (para edición)"""
     if not Usuarios:
@@ -743,7 +746,9 @@ def obtener_datos_usuario(request, user_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-@login_required
+
+@login_required_session
+@role_required('Administrador')  # ← AGREGAR ESTE DECORADOR
 def editar_usuario(request, user_id):
     """Vista para editar un usuario (alias de crear_usuario_modal)"""
     if request.method == 'POST':
@@ -752,7 +757,9 @@ def editar_usuario(request, user_id):
     # Si es GET, redirigir a lista de usuarios
     return redirect('members:lista_usuarios')
 
-@login_required
+
+@login_required_session
+@role_required('Administrador')  # ← AGREGAR ESTE DECORADOR
 @require_http_methods(["POST"])
 def crear_usuario_modal(request):
     """Vista para crear o editar usuario desde modal"""
@@ -824,7 +831,9 @@ def crear_usuario_modal(request):
         messages.error(request, f'Error al guardar usuario: {str(e)}')
         return redirect('members:lista_usuarios')
 
-@login_required
+
+@login_required_session
+@role_required('Administrador')  # ← AGREGAR ESTE DECORADOR
 @require_http_methods(["POST"])
 def eliminar_usuario(request, user_id):
     """Vista para eliminar un usuario"""

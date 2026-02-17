@@ -171,10 +171,17 @@
             <a href="{% url 'members:index' %}" class="nav-link text-sm font-medium">Inicio</a>
             <a href="{% url 'members:lista_casos' %}" class="nav-link text-sm font-medium">Casos</a>
             <a href="{% url 'members:mapa_casos' %}" class="nav-link text-sm font-medium">Mapa</a>
-            <a href="{% url 'members:lista_usuarios' %}" class="nav-link text-sm font-medium">Usuarios</a>
+            
+            {% if request.session.user_role == 'Administrador' %}
+              <a href="{% url 'members:lista_usuarios' %}" class="nav-link text-sm font-medium">Usuarios</a>
+            {% endif %}
+            
             <a href="{% url 'members:lista_donaciones' %}" class="nav-link text-sm font-medium">Donaciones</a>
             <a href="{% url 'members:lista_categorias' %}" class="nav-link text-sm font-medium">Categorías</a>
-            <a href="/admin/" class="nav-link text-sm font-medium">Admin</a>
+            
+            {% if request.session.user_role == 'Administrador' %}
+              <a href="/admin/" class="nav-link text-sm font-medium">Admin</a>
+            {% endif %}
           </div>
         </div>
         
@@ -200,64 +207,7 @@
   </header>
 
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="{% url 'members:feed' %}">
-            <i class="fas fa-hands-helping me-2"></i>Juntos Apoyándonos
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'members:feed' %}">
-                        <i class="fas fa-home me-1"></i> Inicio
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'members:lista_casos' %}">
-                        <i class="fas fa-list me-1"></i> Casos
-                    </a>
-                </li>
-                <!-- Comentadas temporalmente -->
-                <!--
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'members:mapa_casos' %}">
-                        <i class="fas fa-map me-1"></i> Mapa
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'members:lista_categorias' %}">
-                        <i class="fas fa-tags me-1"></i> Categorías
-                    </a>
-                </li>
-                -->
-                {% if user.is_authenticated %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'members:mis_casos' %}">
-                        <i class="fas fa-folder me-1"></i> Mis Casos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'members:logout' %}">
-                        <i class="fas fa-sign-out-alt me-1"></i> Salir
-                    </a>
-                </li>
-                {% else %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'members:login' %}">
-                        <i class="fas fa-sign-in-alt me-1"></i> Iniciar Sesión
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'members:register' %}">
-                        <i class="fas fa-user-plus me-1"></i> Registrarse
-                    </a>
-                </li>
-                {% endif %}
-            </ul>
-        </div>
-    </div>
+
 </nav>
 
   <main class="container mx-auto px-6 py-8">

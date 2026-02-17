@@ -15,7 +15,6 @@
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Donador</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Caso</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Monto</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Fecha</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Estado</th>
           </tr>
@@ -45,9 +44,7 @@
                 {% endif %}
               </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm font-semibold text-green-600">${{ d.monto|floatformat:2 }}</div>
-            </td>
+            
             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
               {{ d.fecha_compromiso|date:"d/m/Y" }}
             </td>
