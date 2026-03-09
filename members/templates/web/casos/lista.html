@@ -1,0 +1,76 @@
+{% extends 'web/base_web.html' %}
+{% load static %}
+
+{% block title %}Casos - Tonalli{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-6 fw-bold">Casos Disponibles</h1>
+            <p class="text-muted">Encuentra casos que necesitan tu apoyo</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-primary" onclick="window.location.href='{% url 'crear_caso_web' %}'">
+                <i class="bi bi-plus-circle"></i> Crear Caso
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Buscar casos...">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="categoriaFilter">
+                        <option value="">Todas las categorías</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="estadoFilter">
+                        <option value="">Todos los estados</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-secondary w-100" onclick="limpiarFiltros()">
+                        <i class="bi bi-x-circle"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <p class="text-muted">Mostrando <span id="totalCasos">0</span> casos</p>
+        </div>
+    </div>
+
+    <div class="row g-3" id="casosContainer">
+        <!-- Loading -->
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="Paginación de casos">
+                <ul class="pagination justify-content-center" id="paginationContainer"></ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/web/casos-lista.js' %}"></script>
+{% endblock %}

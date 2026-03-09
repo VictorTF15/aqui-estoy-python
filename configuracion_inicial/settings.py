@@ -22,7 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    'drf_yasg',  # ✅ Asegurar que esté instalado
+    'drf_spectacular',
     'corsheaders',
     'django_filters',
     'members',
@@ -30,7 +30,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # ← Agregar CORS
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -53,7 +53,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.media',  # Agregar para MEDIA
+                'django.template.context_processors.media',
             ],
         },
     },
@@ -94,36 +94,32 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'members' / 'static',
 ]
 
-# Media files (Uploads de usuarios)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Configuración de archivos subidos
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
 
-# Configuración de autenticación
-LOGIN_URL = 'members:login'  # Cambia de '/accounts/login/' a 'members:login'
+LOGIN_URL = 'members:login'
 LOGIN_REDIRECT_URL = 'members:feed'
 LOGOUT_REDIRECT_URL = 'members:login'
 
-# Django REST Framework
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',  # ✅ Usar sesiones Django
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  # ✅ JWT opcional
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  
+        'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
@@ -132,11 +128,8 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',  # ✅ Para drf-yasg
-    'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',  # ✅ Handler por defecto
 }
 
-# JWT Settings
 from datetime import timedelta
 
 SIMPLE_JWT = {
@@ -152,20 +145,39 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 
-# DRF Spectacular (Swagger/OpenAPI)
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Aquí Estoy API',
-    'DESCRIPTION': 'API REST para la plataforma de donaciones Aquí Estoy',
+    'TITLE': 'Sistema de Gestión de Casos Sociales - API',
+    'DESCRIPTION': 'API REST para gestión de casos sociales, donaciones y usuarios',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
-    'COMPONENT_SPLIT_REQUEST': True,
     'SCHEMA_PATH_PREFIX': '/api/',
+    'COMPONENT_SPLIT_REQUEST': True,
     'SERVERS': [
-        {'url': 'http://127.0.0.1:8000', 'description': 'Desarrollo'},
+        {'url': 'http://127.0.0.1:8000', 'description': 'Desarrollo Local'},
+    ],
+    'TAGS': [
+        {'name': 'Autenticación', 'description': 'Endpoints de autenticación y tokens JWT'},
+        {'name': 'Usuarios', 'description': 'Gestión completa de usuarios del sistema'},
+        {'name': 'Tipos de Usuario', 'description': 'Catálogo de roles y tipos de usuario'},
+        {'name': 'Casos', 'description': 'Gestión de casos sociales'},
+        {'name': 'Estados de Caso', 'description': 'Catálogo de estados para casos'},
+        {'name': 'Categorías', 'description': 'Categorías de clasificación de casos'},
+        {'name': 'Caso-Categorías', 'description': 'Relación entre casos y categorías'},
+        {'name': 'Donaciones', 'description': 'Gestión de donaciones y contribuciones'},
+        {'name': 'Evidencias', 'description': 'Archivos multimedia de evidencia de casos'},
+        {'name': 'Conversaciones', 'description': 'Hilos de conversación entre usuarios'},
+        {'name': 'Mensajes', 'description': 'Mensajes dentro de conversaciones'},
+        {'name': 'Tipos de Mensaje', 'description': 'Catálogo de tipos de mensaje'},
+        {'name': 'Reportes', 'description': 'Reportes de usuarios o contenido inapropiado'},
+        {'name': 'Estados de Reporte', 'description': 'Catálogo de estados de reportes'},
+        {'name': 'Sanciones', 'description': 'Sanciones aplicadas a usuarios'},
+        {'name': 'Tipos de Sanción', 'description': 'Catálogo de tipos de sanción'},
+        {'name': 'Documentos OCR', 'description': 'Documentos procesados con OCR'},
+        {'name': 'Estados OCR', 'description': 'Catálogo de estados de procesamiento OCR'},
+        {'name': 'Log OCR', 'description': 'Historial de procesamiento OCR'},
     ],
 }
 
-# CORS Settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -174,3 +186,5 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+AUTH_USER_MODEL = 'members.Usuarios'

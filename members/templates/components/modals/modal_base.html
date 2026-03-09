@@ -1,0 +1,58 @@
+<div id="{{ modal_id }}" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="{{ modal_id }}Label" role="dialog" aria-modal="true">
+    <!-- Overlay -->
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
+
+        <!-- Modal Panel -->
+        <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle {% if modal_size == 'lg' %}sm:max-w-lg{% elif modal_size == 'xl' %}sm:max-w-xl{% else %}sm:max-w-md{% endif %} sm:w-full">
+            <!-- Header -->
+            <div class="px-6 py-4 bg-gradient-to-r from-sky-600 to-blue-600">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-white" id="{{ modal_id }}Label">
+                        {{ modal_title }}
+                    </h3>
+                    <button type="button" class="text-white hover:text-sky-100 transition" onclick="closeModal('{{ modal_id }}')">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="px-6 py-4 bg-white">
+                {% block modal_body %}
+                {{ modal_body }}
+                {% endblock %}
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 bg-blue-50 border-t border-sky-100">
+                {% block modal_footer %}
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('{{ modal_id }}')" 
+                            class="px-4 py-2 text-sm font-medium text-sky-700 bg-white border border-sky-300 rounded-md hover:bg-sky-50 transition">
+                        Cancelar
+                    </button>
+                    <button type="button" id="{{ modal_id }}Confirm" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700 transition">
+                        {{ confirm_text|default:"Confirmar" }}
+                    </button>
+                </div>
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openModal(modalId) {
+    document.getElementById(modalId).classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+</script>

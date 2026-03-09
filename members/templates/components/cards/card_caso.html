@@ -1,0 +1,68 @@
+<div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-sky-100 caso-card" data-caso-id="{{ caso.id }}">
+    <!-- Imagen -->
+    <div class="relative h-48 overflow-hidden bg-gradient-to-br from-sky-100 to-blue-100">
+        {% if caso.imagen1 %}
+        <img src="{{ caso.imagen1 }}" alt="{{ caso.titulo }}" class="w-full h-full object-cover">
+        {% else %}
+        <div class="w-full h-full flex items-center justify-center">
+            <svg class="w-20 h-20 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+        </div>
+        {% endif %}
+        
+        <!-- Badge Estado -->
+        {% if caso.estado %}
+        <div class="absolute top-2 right-2">
+            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-white text-sky-700 shadow">
+                {{ caso.estado.nombre }}
+            </span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Contenido -->
+    <div class="p-5">
+        <h3 class="text-lg font-bold text-sky-800 mb-2 line-clamp-2">{{ caso.titulo }}</h3>
+        <p class="text-sm text-sky-600 mb-4 line-clamp-3">{{ caso.descripcion }}</p>
+
+        <!-- Categorías -->
+        <div class="flex flex-wrap gap-2 mb-4">
+            {% for categoria in caso.categorias %}
+            <span class="px-2 py-1 text-xs font-medium bg-sky-100 text-sky-700 rounded">
+                {{ categoria }}
+            </span>
+            {% endfor %}
+        </div>
+
+        <!-- Info adicional -->
+        <div class="flex items-center justify-between text-xs text-sky-500 mb-4">
+            <div class="flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <span>{{ caso.colonia|default:"Sin ubicación" }}</span>
+            </div>
+            <div class="flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                <span>{{ caso.vistas|default:0 }}</span>
+            </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="grid grid-cols-2 gap-2">
+            <a href="{% url 'members:detalle_caso_web' caso.id %}" 
+               class="py-2 px-4 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-md text-center transition">
+                Ver más
+            </a>
+            <button onclick="compartirCaso({{ caso.id }})" 
+                    class="py-2 px-4 bg-white hover:bg-sky-50 text-sky-700 border border-sky-300 text-sm font-semibold rounded-md transition">
+                Compartir
+            </button>
+        </div>
+    </div>
+</div>

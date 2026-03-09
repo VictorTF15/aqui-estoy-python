@@ -1,0 +1,136 @@
+<!doctype html>
+{% load static %}
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Aqui Estoy!{% endblock %}</title>
+    <link href="{% static 'css/main.css' %}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-blue-50 min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-md border-b border-sky-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="{% url 'members:home_web' %}" class="text-2xl font-bold text-sky-700 hover:text-sky-800">
+                        Aqui Estoy!
+                    </a>
+                </div>
+
+                <!-- Menu Desktop -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="{% url 'members:home_web' %}" class="text-sky-700 hover:text-sky-900 font-medium transition">
+                        Inicio
+                    </a>
+                    <a href="{% url 'members:lista_casos_web' %}" class="text-sky-700 hover:text-sky-900 font-medium transition">
+                        Casos
+                    </a>
+                    <a href="{% url 'members:lista_donaciones_web' %}" class="text-sky-700 hover:text-sky-900 font-medium transition">
+                        Mis Donaciones
+                    </a>
+                    <a href="{% url 'members:crear_caso_web' %}" 
+                       class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-md font-semibold transition">
+                        Crear Caso
+                    </a>
+
+                    <!-- User Menu -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center space-x-2 text-sky-700 hover:text-sky-900">
+                            <img id="userAvatar" src="https://ui-avatars.com/api/?name=User" 
+                                 class="w-8 h-8 rounded-full border-2 border-sky-300">
+                            <span id="userNameNav" class="font-medium">Usuario</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        
+                        <div x-show="open" @click.away="open = false" 
+                             class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-50">
+                            <a href="{% url 'members:perfil_web' %}" class="block px-4 py-2 text-sm text-sky-700 hover:bg-blue-50">
+                                Mi Perfil
+                            </a>
+                            <hr class="my-1">
+                            <a href="#" onclick="logout(); return false;" 
+                               class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                Cerrar Sesión
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button type="button" class="text-sky-700 hover:text-sky-900">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-sky-900 text-white py-8 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Aqui Estoy!</h3>
+                    <p class="text-sky-200">Plataforma de apoyo social y solidaridad comunitaria</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-3">Enlaces</h4>
+                    <ul class="space-y-2 text-sky-200">
+                        <li><a href="#" class="hover:text-white">Acerca de</a></li>
+                        <li><a href="#" class="hover:text-white">Términos</a></li>
+                        <li><a href="#" class="hover:text-white">Privacidad</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-3">Contacto</h4>
+                    <p class="text-sky-200">soporte@aquiestoy.com</p>
+                </div>
+            </div>
+            <hr class="my-6 border-sky-700">
+            <p class="text-center text-sky-200">© 2026 Aqui Estoy! Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="{% static 'js/api/apiClient.js' %}"></script>
+    <script src="{% static 'js/api/authService.js' %}"></script>
+    <script>
+        async function loadUserInfo() {
+            const result = await authService.getProfile();
+            if (result.success) {
+                const user = result.data;
+                document.getElementById('userNameNav').textContent = user.nombres;
+                document.getElementById('userAvatar').src = user.imagen_perfil || 
+                    `https://ui-avatars.com/api/?name=${user.nombres}`;
+            }
+        }
+
+        function logout() {
+            if (confirm('¿Seguro que deseas cerrar sesión?')) {
+                authService.logout();
+                window.location.href = '/web/login/';
+            }
+        }
+
+        if (!authService.isAuthenticated()) {
+            window.location.href = '/web/login/';
+        } else {
+            loadUserInfo();
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

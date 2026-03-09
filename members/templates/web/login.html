@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Aqui Estoy!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-sky-50 to-blue-100 min-h-screen">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-sky-800">¡Aqui Estoy!</h1>
+                <p class="text-sky-600 mt-2">Inicia sesión en tu cuenta</p>
+            </div>
+
+            <form id="loginForm" class="space-y-6">
+                <div id="alertContainer"></div>
+
+                <div>
+                    <label class="block text-sm font-medium text-sky-700 mb-2">Correo Electrónico</label>
+                    <input type="email" id="correo" required
+                           class="w-full rounded-md border border-sky-200 bg-blue-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                           placeholder="tu@correo.com">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-sky-700 mb-2">Contraseña</label>
+                    <input type="password" id="contrasena" required
+                           class="w-full rounded-md border border-sky-200 bg-blue-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                           placeholder="••••••••">
+                </div>
+
+                <button type="submit" id="btnLogin"
+                        class="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white font-semibold py-3 rounded-md shadow-md transition">
+                    <span id="loginText">Entrar</span>
+                    <span id="loginSpinner" class="hidden">
+                        <svg class="animate-spin h-5 w-5 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Entrando...
+                    </span>
+                </button>
+            </form>
+
+            <p class="text-center text-sm text-sky-600 mt-6">
+                ¿No tienes cuenta? 
+                <a href="/web/register/" class="font-semibold text-sky-700 hover:text-sky-900">Regístrate aquí</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api';
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const btnLogin = document.getElementById('btnLogin');
+            const loginText = document.getElementById('loginText');
+            const loginSpinner = document.getElementById('loginSpinner');
+
+            // Mostrar spinner
+            btnLogin.disabled = true;
+            loginText.classList.add('hidden');
+            loginSpinner.classList.remove('hidden');
+
+            const correo = document.getElementById('correo').value.trim();
+            const contrasena = document.getElementById('contrasena').value;
+
+            console.log('Intentando login con:', { correo }); // Debug
+
+            try {
+                // OPCIÓN 1: Intentar con /api/auth/token/
+                let response = await fetch(`${API_URL}/auth/token/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ correo, contrasena })
+                });
+
+                console.log('Respuesta de /api/auth/token/:', response.status); // Debug
+
+                // Si falla, intentar con /api/token/
+                if (!response.ok) {
+                    console.log('Intentando con /api/token/...'); // Debug
+                    response = await fetch(`${API_URL}/token/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ correo, contrasena })
+                    });
+                    console.log('Respuesta de /api/token/:', response.status); // Debug
+                }
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Login exitoso:', data); // Debug
+                    
+                    localStorage.setItem('access_token', data.access);
+                    localStorage.setItem('refresh_token', data.refresh);
+                    
+                    showAlert('¡Bienvenido!', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = '/web/home/';
+                    }, 1000);
+                } else {
+                    const errorData = await response.json();
+                    console.error('Error de login:', errorData); // Debug
+                    
+                    let errorMessage = 'Credenciales incorrectas';
+                    if (errorData.detail) {
+                        errorMessage = errorData.detail;
+                    } else if (errorData.correo) {
+                        errorMessage = `Correo: ${errorData.correo[0]}`;
+                    } else if (errorData.contrasena) {
+                        errorMessage = `Contraseña: ${errorData.contrasena[0]}`;
+                    }
+                    
+                    showAlert(errorMessage, 'danger');
+                    
+                    // Restaurar botón
+                    btnLogin.disabled = false;
+                    loginText.classList.remove('hidden');
+                    loginSpinner.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Error de conexión:', error); // Debug
+                showAlert('Error de conexión. Verifica que el servidor esté funcionando.', 'danger');
+                
+                // Restaurar botón
+                btnLogin.disabled = false;
+                loginText.classList.remove('hidden');
+                loginSpinner.classList.add('hidden');
+            }
+        });
+
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const colorClass = type === 'danger' 
+                ? 'bg-red-50 text-red-800 border-red-200' 
+                : 'bg-green-50 text-green-800 border-green-200';
+            
+            const icon = type === 'danger'
+                ? '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                : '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+            
+            alertContainer.innerHTML = `
+                <div class="flex items-center p-4 mb-4 rounded-md border ${colorClass} animate-fade-in">
+                    ${icon}
+                    <p class="text-sm font-medium">${message}</p>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

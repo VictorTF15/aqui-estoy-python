@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
 class TipoUsuario(models.Model):
     nombre = models.CharField(max_length=50, unique=True)
@@ -91,13 +92,53 @@ class Categorias(models.Model):
         return self.nombre
 
 
-class Usuarios(models.Model):
+class UsuariosManager(BaseUserManager):
+    def create_user(self, correo, nombres, apellido_paterno, contrasena=None, **extra_fields):
+        if not correo:
+            raise ValueError('El usuario debe tener un correo electrónico')
+        
+        correo = self.normalize_email(correo)
+        
+        # Obtener o crear tipo de usuario por defecto
+        tipo_usuario_default, _ = TipoUsuario.objects.get_or_create(
+            nombre='Usuario Normal',
+            defaults={'descripcion': 'Usuario regular del sistema'}
+        )
+        
+        user = self.model(
+            correo=correo,
+            nombres=nombres,
+            apellido_paterno=apellido_paterno,
+            id_tipo_usuario=extra_fields.pop('id_tipo_usuario', tipo_usuario_default),
+            **extra_fields
+        )
+        user.set_password(contrasena)
+        user.save(using=self._db)
+        return user
+    
+    def create_superuser(self, correo, nombres, apellido_paterno, contrasena=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('esta_activo', True)
+        extra_fields.setdefault('verificado', True)
+        
+        # Crear o obtener tipo de usuario admin
+        tipo_usuario_admin, _ = TipoUsuario.objects.get_or_create(
+            nombre='Administrador',
+            defaults={'descripcion': 'Administrador del sistema'}
+        )
+        extra_fields['id_tipo_usuario'] = tipo_usuario_admin
+        
+        return self.create_user(correo, nombres, apellido_paterno, contrasena, **extra_fields)
+
+
+class Usuarios(AbstractBaseUser, PermissionsMixin):
     id_tipo_usuario = models.ForeignKey(TipoUsuario, on_delete=models.PROTECT, db_column='idTipoUsuario')
     nombres = models.CharField(max_length=100)
     apellido_paterno = models.CharField(max_length=100)
     apellido_materno = models.CharField(max_length=100, null=True, blank=True)
     correo = models.EmailField(max_length=150, unique=True)
-    contrasena = models.CharField(max_length=255)
+    contrasena = models.CharField(max_length=255, db_column='contrasena')
     telefono = models.CharField(max_length=20, null=True, blank=True)
     direccion = models.CharField(max_length=300, null=True, blank=True)
     colonia = models.CharField(max_length=100, null=True, blank=True)
@@ -111,6 +152,70 @@ class Usuarios(models.Model):
     imagen_perfil = models.CharField(max_length=500, null=True, blank=True)
     imagen_ine_frontal_url = models.CharField(max_length=500, null=True, blank=True)
     imagen_ine_trasera_url = models.CharField(max_length=500, null=True, blank=True)
+    last_login = models.DateTimeField(null=True, blank=True, verbose_name='último acceso')
+    
+    # Campos adicionales para Django Admin
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    
+    # Resolver conflictos con auth.User
+    groups = models.ManyToManyField(
+        'auth.Group',
+        verbose_name='groups',
+        blank=True,
+        related_name='usuarios_set',
+        related_query_name='usuario',
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        verbose_name='user permissions',
+        blank=True,
+        related_name='usuarios_set',
+        related_query_name='usuario',
+    )
+    
+    objects = UsuariosManager()
+    
+    USERNAME_FIELD = 'correo'
+    REQUIRED_FIELDS = ['nombres', 'apellido_paterno']
+    
+    # ============================================
+    # PROPIEDAD PARA MAPEAR 'password' A 'contrasena'
+    # ============================================
+    @property
+    def password(self):
+        """Alias para que Django encuentre el campo password"""
+        return self.contrasena
+    
+    @password.setter
+    def password(self, value):
+        """Setter para que Django pueda establecer password"""
+        self.contrasena = value
+    
+    # ============================================
+    # MÉTODOS REQUERIDOS POR DJANGO AUTH
+    # ============================================
+    def set_password(self, raw_password):
+        """Hashear y guardar la contraseña"""
+        from django.contrib.auth.hashers import make_password
+        self.contrasena = make_password(raw_password)
+        self._password = raw_password
+    
+    def check_password(self, raw_password):
+        """Verificar la contraseña"""
+        from django.contrib.auth.hashers import check_password
+        def setter(raw_password):
+            self.set_password(raw_password)
+            self._password = None
+            self.save(update_fields=["contrasena"])
+        return check_password(raw_password, self.contrasena, setter)
+    
+    def save(self, *args, **kwargs):
+        """Override save para asegurar que la contraseña esté hasheada"""
+        # Si la contraseña no está hasheada, hashearla
+        if self.contrasena and not self.contrasena.startswith(('pbkdf2_', 'bcrypt', 'argon2')):
+            self.set_password(self.contrasena)
+        super().save(*args, **kwargs)
 
     class Meta:
         db_table = 'Usuarios'
@@ -122,6 +227,14 @@ class Usuarios(models.Model):
 
     def __str__(self):
         return f"{self.nombres} {self.apellido_paterno}"
+    
+    def get_full_name(self):
+        """Retorna el nombre completo del usuario"""
+        return f"{self.nombres} {self.apellido_paterno} {self.apellido_materno or ''}".strip()
+    
+    def get_short_name(self):
+        """Retorna el nombre corto del usuario"""
+        return self.nombres
 
 
 class Casos(models.Model):

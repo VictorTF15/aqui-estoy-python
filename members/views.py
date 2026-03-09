@@ -4,7 +4,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count, Sum
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_http_methods  # AGREGAR ESTA LÍNEA
 from .models import Casos, Categorias, EstadoCaso, Donaciones, CasoCategorias
@@ -972,3 +972,27 @@ def admin(request):
     }
     
     return render(request, 'members/admin.html', context)
+
+# ============================================
+# VISTAS BÁSICAS
+# ============================================
+
+def myfirst(request):
+    """Página principal - redirige al login web"""
+    return redirect('members:login_web')
+
+# ============================================
+# VISTAS DE ADMIN (Si las necesitas)
+# ============================================
+
+def login_view(request):
+    """Vista de login para administradores"""
+    return render(request, 'members/login.html')
+
+def register(request):
+    """Vista de registro para administradores"""
+    return render(request, 'members/register.html')
+
+def feed(request):
+    """Vista de feed para administradores"""
+    return render(request, 'members/feed.html')

@@ -1,0 +1,16 @@
+/my_web_app
+│
+├── /src
+│   ├── /components
+│   │   ├── Modal.js
+│   │   ├── Card.js
+│   │   └── LoginForm.js
+│   ├── /pages
+│   │   ├── LoginPage.js
+│   │   └── AdminPage.js
+│   ├── /api
+│   │   └── api.js
+│   ├── App.js
+│   └── index.js
+│
+└── package.json

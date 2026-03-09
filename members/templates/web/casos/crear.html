@@ -1,0 +1,265 @@
+{% extends 'web/base_web.html' %}
+{% load static %}
+
+{% block title %}Crear Caso - Aqui Estoy!{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-sky-800 mb-2">Crear Nuevo Caso</h1>
+        <p class="text-sky-600">Completa la información para publicar tu caso y recibir apoyo</p>
+    </div>
+
+    <!-- Formulario -->
+    <form id="formCrearCaso" class="bg-white rounded-lg shadow-md p-6 border border-sky-100">
+        <!-- Alertas -->
+        <div id="alertContainer" class="mb-4"></div>
+
+        <!-- Información Básica -->
+        <div class="mb-6">
+            <h2 class="text-xl font-bold text-sky-800 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Información Básica
+            </h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label for="titulo" class="block text-sm font-medium text-sky-700 mb-2">
+                        Título del Caso *
+                    </label>
+                    <input type="text" id="titulo" name="titulo" required maxlength="200"
+                           placeholder="Ej: Ayuda para tratamiento médico"
+                           class="w-full rounded-md border border-sky-200 bg-blue-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400">
+                    <p class="text-xs text-sky-500 mt-1">Máximo 200 caracteres</p>
+                </div>
+
+                <div>
+                    <label for="descripcion" class="block text-sm font-medium text-sky-700 mb-2">
+                        Descripción *
+                    </label>
+                    <textarea id="descripcion" name="descripcion" required rows="6"
+                              placeholder="Describe detalladamente tu situación..."
+                              class="w-full rounded-md border border-sky-200 bg-blue-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400"></textarea>
+                    <p class="text-xs text-sky-500 mt-1">Sé lo más detallado posible</p>
+                </div>
+
+                <div>
+                    <label for="beneficiario" class="block text-sm font-medium text-sky-700 mb-2">
+                        Nombre del Beneficiario *
+                    </label>
+                    <input type="text" id="beneficiario" name="beneficiario" required
+                           placeholder="¿Quién recibirá la ayuda?"
+                           class="w-full rounded-md border border-sky-200 bg-blue-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400">
+                </div>
+            </div>
+        </div>
+
+        <!-- Ubicación -->
+        <div class="mb-6">
+            <h2 class="text-xl font-bold text-sky-800 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                Ubicación
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="calle" class="block text-sm font-medium text-sky-700 mb-2">Calle</label>
+                    <input type="text" id="calle" name="calle"
+                           class="w-full rounded-md border border-sky-200 bg-blue-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400">
+                </div>
+
+                <div>
+                    <label for="numero" class="block text-sm font-medium text-sky-700 mb-2">Número</label>
+                    <input type="text" id="numero" name="numero"
+                           class="w-full rounded-md border border-sky-200 bg-blue-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400">
+                </div>
+
+                <div>
+                    <label for="colonia" class="block text-sm font-medium text-sky-700 mb-2">Colonia *</label>
+                    <input type="text" id="colonia" name="colonia" required
+                           class="w-full rounded-md border border-sky-200 bg-blue-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400">
+                </div>
+
+                <div>
+                    <label for="codigo_postal" class="block text-sm font-medium text-sky-700 mb-2">Código Postal</label>
+                    <input type="text" id="codigo_postal" name="codigo_postal" maxlength="5"
+                           class="w-full rounded-md border border-sky-200 bg-blue-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400">
+                </div>
+
+                <div>
+                    <label for="ciudad" class="block text-sm font-medium text-sky-700 mb-2">Ciudad *</label>
+                    <input type="text" id="ciudad" name="ciudad" required
+                           class="w-full rounded-md border border-sky-200 bg-blue-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400">
+                </div>
+
+                <div>
+                    <label for="estado" class="block text-sm font-medium text-sky-700 mb-2">Estado *</label>
+                    <input type="text" id="estado" name="estado" required
+                           class="w-full rounded-md border border-sky-200 bg-blue-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400">
+                </div>
+            </div>
+        </div>
+
+        <!-- Categorías y Meta -->
+        <div class="mb-6">
+            <h2 class="text-xl font-bold text-sky-800 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                </svg>
+                Categoría y Meta
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="id_categoria" class="block text-sm font-medium text-sky-700 mb-2">Categoría *</label>
+                    <select id="id_categoria" name="id_categoria" required
+                            class="w-full rounded-md border border-sky-200 bg-blue-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400">
+                        <option value="">Selecciona una categoría</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="meta_donacion" class="block text-sm font-medium text-sky-700 mb-2">Meta de Donación</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sky-600 font-bold">$</span>
+                        <input type="number" id="meta_donacion" name="meta_donacion" min="0" step="0.01"
+                               placeholder="0.00"
+                               class="w-full pl-8 pr-4 py-3 rounded-md border border-sky-200 bg-blue-50 focus:outline-none focus:ring-2 focus:ring-sky-400">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Imágenes -->
+        <div class="mb-6">
+            <h2 class="text-xl font-bold text-sky-800 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Imágenes
+            </h2>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="image-upload-container">
+                    <label for="imagen1" class="image-upload-label">
+                        <div class="image-preview" id="preview1">
+                            <svg class="w-12 h-12 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            <span class="text-sm text-sky-600 mt-2">Imagen 1</span>
+                        </div>
+                    </label>
+                    <input type="file" id="imagen1" name="imagen1" accept="image/*" class="hidden" onchange="previewImage(this, 'preview1')">
+                </div>
+
+                <div class="image-upload-container">
+                    <label for="imagen2" class="image-upload-label">
+                        <div class="image-preview" id="preview2">
+                            <svg class="w-12 h-12 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            <span class="text-sm text-sky-600 mt-2">Imagen 2</span>
+                        </div>
+                    </label>
+                    <input type="file" id="imagen2" name="imagen2" accept="image/*" class="hidden" onchange="previewImage(this, 'preview2')">
+                </div>
+
+                <div class="image-upload-container">
+                    <label for="imagen3" class="image-upload-label">
+                        <div class="image-preview" id="preview3">
+                            <svg class="w-12 h-12 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            <span class="text-sm text-sky-600 mt-2">Imagen 3</span>
+                        </div>
+                    </label>
+                    <input type="file" id="imagen3" name="imagen3" accept="image/*" class="hidden" onchange="previewImage(this, 'preview3')">
+                </div>
+
+                <div class="image-upload-container">
+                    <label for="imagen4" class="image-upload-label">
+                        <div class="image-preview" id="preview4">
+                            <svg class="w-12 h-12 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            <span class="text-sm text-sky-600 mt-2">Imagen 4</span>
+                        </div>
+                    </label>
+                    <input type="file" id="imagen4" name="imagen4" accept="image/*" class="hidden" onchange="previewImage(this, 'preview4')">
+                </div>
+            </div>
+            <p class="text-xs text-sky-500 mt-2">Formatos aceptados: JPG, PNG. Tamaño máximo: 5MB por imagen</p>
+        </div>
+
+        <!-- Botones -->
+        <div class="flex justify-end space-x-4 pt-6 border-t border-sky-100">
+            <a href="{% url 'members:lista_casos_web' %}" 
+               class="px-6 py-3 text-sky-700 bg-white border border-sky-300 rounded-md font-semibold hover:bg-sky-50 transition">
+                Cancelar
+            </a>
+            <button type="submit" id="btnSubmit"
+                    class="px-6 py-3 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white rounded-md font-semibold shadow-md transition">
+                <span id="submitText">Crear Caso</span>
+                <span id="submitSpinner" class="hidden">
+                    <svg class="animate-spin h-5 w-5 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creando...
+                </span>
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+.image-upload-container {
+    position: relative;
+}
+
+.image-upload-label {
+    display: block;
+    cursor: pointer;
+}
+
+.image-preview {
+    width: 100%;
+    height: 150px;
+    border: 2px dashed #0ea5e9;
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(to bottom, #f0f9ff, #e0f2fe);
+    transition: all 0.3s;
+}
+
+.image-preview:hover {
+    border-color: #0284c7;
+    background: linear-gradient(to bottom, #e0f2fe, #bae6fd);
+}
+
+.image-preview.has-image {
+    padding: 0;
+    border-style: solid;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0.5rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/web/crear-caso.js' %}"></script>
+{% endblock %}

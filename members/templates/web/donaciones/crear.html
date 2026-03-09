@@ -1,0 +1,294 @@
+{% extends 'web/base_web.html' %}
+
+{% block title %}Realizar Donación - Aqui Estoy!{% endblock %}
+
+{% block extra_css %}
+<style>
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .amount-option:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+    }
+    
+    .amount-option.active {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        color: white;
+        border-color: #0284c7;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    
+    <!-- Header -->
+    <div class="mb-8">
+        <a href="javascript:history.back()" class="inline-flex items-center text-sky-600 hover:text-sky-700 mb-4">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Volver
+        </a>
+        <h1 class="text-3xl font-bold text-sky-800 mb-2">Realizar Donación</h1>
+        <p class="text-sky-600">Apoya este caso con tu contribución</p>
+    </div>
+    
+    <!-- Alertas -->
+    <div id="alertContainer" class="mb-6"></div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Formulario de Donación -->
+        <div class="lg:col-span-2">
+            <form id="formDonacion" class="bg-white rounded-lg shadow-lg p-6 space-y-6">
+                
+                <!-- Información del Caso -->
+                <div id="casoInfo" class="p-4 bg-sky-50 rounded-lg border border-sky-100">
+                    <div class="flex items-start gap-4">
+                        <div id="casoImagen" class="w-20 h-20 bg-sky-200 rounded-lg flex-shrink-0"></div>
+                        <div class="flex-1">
+                            <h3 id="casoTitulo" class="font-semibold text-sky-800 mb-1">Cargando...</h3>
+                            <p id="casoMeta" class="text-sm text-sky-600"></p>
+                            <div class="mt-2">
+                                <div class="w-full bg-sky-200 rounded-full h-2">
+                                    <div id="casoProgreso" class="bg-sky-600 h-2 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Monto -->
+                <div>
+                    <label class="block text-sm font-semibold text-sky-700 mb-3">Monto de la Donación</label>
+                    
+                    <!-- Opciones Predefinidas -->
+                    <div class="grid grid-cols-4 gap-3 mb-4">
+                        <button type="button" 
+                                onclick="seleccionarMonto(100)" 
+                                class="amount-option px-4 py-3 border-2 border-sky-200 rounded-lg font-semibold text-sky-700 transition">
+                            $100
+                        </button>
+                        <button type="button" 
+                                onclick="seleccionarMonto(250)" 
+                                class="amount-option px-4 py-3 border-2 border-sky-200 rounded-lg font-semibold text-sky-700 transition">
+                            $250
+                        </button>
+                        <button type="button" 
+                                onclick="seleccionarMonto(500)" 
+                                class="amount-option px-4 py-3 border-2 border-sky-200 rounded-lg font-semibold text-sky-700 transition">
+                            $500
+                        </button>
+                        <button type="button" 
+                                onclick="seleccionarMonto(1000)" 
+                                class="amount-option px-4 py-3 border-2 border-sky-200 rounded-lg font-semibold text-sky-700 transition">
+                            $1000
+                        </button>
+                    </div>
+                    
+                    <!-- Monto Personalizado -->
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-sky-700 font-semibold">$</span>
+                        <input 
+                            type="number" 
+                            id="monto" 
+                            name="monto"
+                            placeholder="Otro monto"
+                            min="10"
+                            step="0.01"
+                            required
+                            class="w-full pl-8 pr-4 py-3 border-2 border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <p class="text-xs text-sky-500 mt-2">Monto mínimo: $10.00</p>
+                </div>
+                
+                <!-- Método de Pago -->
+                <div>
+                    <label class="block text-sm font-semibold text-sky-700 mb-3">Método de Pago</label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="metodo_pago" value="Tarjeta de Crédito" required class="peer sr-only">
+                            <div class="p-4 border-2 border-sky-200 rounded-lg peer-checked:border-sky-600 peer-checked:bg-sky-50 transition">
+                                <div class="flex flex-col items-center">
+                                    <svg class="w-8 h-8 text-sky-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium text-sky-800">Tarjeta</span>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="metodo_pago" value="PayPal" class="peer sr-only">
+                            <div class="p-4 border-2 border-sky-200 rounded-lg peer-checked:border-sky-600 peer-checked:bg-sky-50 transition">
+                                <div class="flex flex-col items-center">
+                                    <svg class="w-8 h-8 text-sky-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium text-sky-800">PayPal</span>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="metodo_pago" value="Transferencia" class="peer sr-only">
+                            <div class="p-4 border-2 border-sky-200 rounded-lg peer-checked:border-sky-600 peer-checked:bg-sky-50 transition">
+                                <div class="flex flex-col items-center">
+                                    <svg class="w-8 h-8 text-sky-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium text-sky-800">Transferencia</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Mensaje de Apoyo -->
+                <div>
+                    <label for="comentario" class="block text-sm font-semibold text-sky-700 mb-2">
+                        Mensaje de Apoyo (Opcional)
+                    </label>
+                    <textarea 
+                        id="comentario" 
+                        name="comentario"
+                        rows="4"
+                        placeholder="Escribe un mensaje para el beneficiario..."
+                        class="w-full px-4 py-3 border-2 border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></textarea>
+                    <p class="text-xs text-sky-500 mt-1">Este mensaje será visible para el beneficiario</p>
+                </div>
+                
+                <!-- Opciones -->
+                <div class="space-y-3">
+                    <label class="flex items-start cursor-pointer group">
+                        <input type="checkbox" id="anonima" name="anonima" class="mt-1 mr-3 w-5 h-5 text-sky-600 border-sky-300 rounded focus:ring-sky-500">
+                        <div>
+                            <span class="text-sm font-medium text-sky-800 group-hover:text-sky-900">Donación Anónima</span>
+                            <p class="text-xs text-sky-600">Tu nombre no será visible públicamente</p>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-start cursor-pointer group">
+                        <input type="checkbox" id="acepto_terminos" required class="mt-1 mr-3 w-5 h-5 text-sky-600 border-sky-300 rounded focus:ring-sky-500">
+                        <div>
+                            <span class="text-sm font-medium text-sky-800 group-hover:text-sky-900">
+                                Acepto los <a href="#" class="text-sky-600 underline">términos y condiciones</a>
+                            </span>
+                            <p class="text-xs text-sky-600">Confirmo que la donación es voluntaria</p>
+                        </div>
+                    </label>
+                </div>
+                
+                <!-- Botones -->
+                <div class="flex gap-4 pt-4 border-t border-sky-100">
+                    <button 
+                        type="button"
+                        onclick="history.back()"
+                        class="flex-1 px-6 py-3 border-2 border-sky-300 text-sky-700 rounded-lg font-semibold hover:bg-sky-50 transition">
+                        Cancelar
+                    </button>
+                    <button 
+                        type="submit"
+                        id="btnEnviar"
+                        class="flex-1 px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-lg font-semibold hover:from-sky-600 hover:to-blue-700 transition shadow-lg">
+                        Realizar Donación
+                    </button>
+                </div>
+                
+            </form>
+        </div>
+        
+        <!-- Resumen -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow-lg p-6 sticky top-24">
+                <h3 class="text-lg font-semibold text-sky-800 mb-4">Resumen</h3>
+                
+                <div class="space-y-4 mb-6">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-sky-600">Monto:</span>
+                        <span id="resumenMonto" class="font-semibold text-sky-800">$0.00</span>
+                    </div>
+                    
+                    <div class="flex justify-between text-sm">
+                        <span class="text-sky-600">Comisión (0%):</span>
+                        <span class="font-semibold text-green-600">$0.00</span>
+                    </div>
+                    
+                    <div class="border-t border-sky-100 pt-4">
+                        <div class="flex justify-between">
+                            <span class="font-semibold text-sky-800">Total:</span>
+                            <span id="resumenTotal" class="text-xl font-bold text-sky-800">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-blue-50 border border-sky-100 rounded-lg p-4">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-sky-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                        <div>
+                            <p class="text-xs font-semibold text-sky-800 mb-1">Donación Segura</p>
+                            <p class="text-xs text-sky-600">Tu información está protegida con encriptación SSL</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 bg-yellow-50 border border-yellow-100 rounded-lg p-4">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-yellow-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div>
+                            <p class="text-xs font-semibold text-yellow-800 mb-1">Deducible de Impuestos</p>
+                            <p class="text-xs text-yellow-700">Recibirás un recibo fiscal por correo</p>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+    
+</div>
+
+<!-- Modal Confirmación -->
+<div id="modalConfirmacion" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-md w-full p-6 text-center">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+        
+        <h3 class="text-xl font-bold text-sky-800 mb-2">¡Donación Exitosa!</h3>
+        <p class="text-sky-600 mb-6">Tu contribución ha sido registrada correctamente</p>
+        
+        <div class="flex gap-3">
+            <a href="/web/donaciones/" class="flex-1 px-4 py-2 border-2 border-sky-300 text-sky-700 rounded-lg font-semibold hover:bg-sky-50 transition">
+                Ver mis donaciones
+            </a>
+            <a href="/web/casos/" class="flex-1 px-4 py-2 bg-sky-600 text-white rounded-lg font-semibold hover:bg-sky-700 transition">
+                Explorar más casos
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script>
+    const casoId = {{ caso_id }};
+</script>
+<script src="{% static 'js/web/crear-donacion.js' %}"></script>
+{% endblock %}

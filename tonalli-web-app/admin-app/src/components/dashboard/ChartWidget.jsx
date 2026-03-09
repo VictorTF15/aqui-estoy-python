@@ -1,0 +1,19 @@
+/my_web_app
+│
+├── /frontend
+│   ├── /components
+│   │   ├── Modal.js
+│   │   ├── Card.js
+│   │   └── LoginForm.js
+│   ├── /pages
+│   │   ├── LoginPage.js
+│   │   └── AdminPage.js
+│   ├── /styles
+│   │   └── styles.css
+│   └── index.js
+│
+├── /backend
+│   ├── app.py
+│   └── requirements.txt
+│
+└── README.md

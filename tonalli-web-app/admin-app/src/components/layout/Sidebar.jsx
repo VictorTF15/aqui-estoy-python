@@ -1,0 +1,14 @@
+   /myapp
+   ├── /backend
+   │   ├── app.py (or manage.py for Django)
+   │   ├── /api
+   │   ├── /models
+   │   ├── /views
+   │   └── /static
+   ├── /frontend
+   │   ├── /src
+   │   │   ├── /components
+   │   │   ├── /pages
+   │   │   ├── /services
+   │   │   └── App.js
+   └── requirements.txt (or package.json)
