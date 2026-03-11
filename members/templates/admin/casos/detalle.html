@@ -1,0 +1,337 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Detalle Caso - Admin{% endblock %}
+{% block page_title %}Detalle del Caso{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div id="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+
+    <div id="contenidoCaso" class="d-none">
+        <div class="row">
+            <!-- Columna Principal -->
+            <div class="col-lg-8">
+                <!-- Información del Caso -->
+                <div class="card mb-4">
+                    <div id="carouselCaso" class="carousel slide">
+                        <div class="carousel-inner" id="imagenesCarousel">
+                            <!-- Las imágenes se cargarán aquí -->
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselCaso" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carouselCaso" data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h2 id="casoTitulo"></h2>
+                                <p class="text-muted mb-0">
+                                    <i class="bi bi-calendar"></i> <span id="casoFecha"></span>
+                                </p>
+                            </div>
+                            <span id="casoEstadoBadge" class="badge bg-success fs-6"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <span class="badge bg-secondary me-2" id="casoCategoria"></span>
+                            <span class="badge bg-info" id="casoUbicacion"></span>
+                        </div>
+
+                        <h5>Descripción</h5>
+                        <p id="casoDescripcion" class="text-muted"></p>
+
+                        <div class="border-top pt-3 mt-4">
+                            <h5>Detalles Adicionales</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Beneficiario:</strong> <span id="casoBeneficiario"></span></p>
+                                    <p><strong>Ubicación:</strong> <span id="casoUbicacionCompleta"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Teléfono:</strong> <span id="casoTelefono"></span></p>
+                                    <p><strong>Fecha límite:</strong> <span id="casoFechaLimite"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Donaciones -->
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Donaciones Recibidas (<span id="totalDonaciones">0</span>)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="listaDonaciones"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Progreso -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="mb-3">Progreso de Recaudación</h5>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Recaudado</span>
+                                <strong id="porcentajeRecaudado">0%</strong>
+                            </div>
+                            <div class="progress" style="height: 25px;">
+                                <div id="barraProgreso" class="progress-bar bg-primary" style="width: 0%">
+                                    <span id="porcentajeTexto">0%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Recaudado:</span>
+                            <strong class="text-primary" id="montoRecaudado">$0</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Meta:</span>
+                            <strong id="montoMeta">$0</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Falta:</span>
+                            <strong class="text-danger" id="montoFaltante">$0</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información del Beneficiario -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="mb-3">Beneficiario</h5>
+                        <div class="text-center mb-3">
+                            <img id="beneficiarioFoto" src="https://via.placeholder.com/100" 
+                                 class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                        </div>
+                        <div class="text-center">
+                            <h6 id="beneficiarioNombre"></h6>
+                            <p class="text-muted mb-2" id="beneficiarioEmail"></p>
+                            <p class="text-muted" id="beneficiarioTelefono"></p>
+                        </div>
+                        <a href="#" id="verPerfilBeneficiario" class="btn btn-outline-primary w-100 mt-2">
+                            <i class="bi bi-person"></i> Ver Perfil
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="mb-3">Acciones</h5>
+                        <div class="d-grid gap-2">
+                            <button id="btnEditar" class="btn btn-warning">
+                                <i class="bi bi-pencil"></i> Editar Caso
+                            </button>
+                            <button id="btnCambiarEstado" class="btn btn-info">
+                                <i class="bi bi-arrow-repeat"></i> Cambiar Estado
+                            </button>
+                            <button id="btnEliminar" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Eliminar Caso
+                            </button>
+                            <a href="/adm/casos/" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Volver
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cambiar Estado -->
+<div class="modal fade" id="modalEstado" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cambiar Estado del Caso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Nuevo Estado</label>
+                    <select id="nuevoEstado" class="form-select">
+                        <option value="1">Activo</option>
+                        <option value="2">Completado</option>
+                        <option value="3">Cancelado</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Motivo (opcional)</label>
+                    <textarea id="motivoCambio" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarCambioEstado()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const casoId = {{ request.resolver_match.kwargs.pk }};
+let casoData = null;
+
+async function cargarCaso() {
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/casos/${casoId}/`);
+        casoData = await response.json();
+        
+        mostrarCaso(casoData);
+        cargarDonaciones();
+        
+        document.getElementById('loading').classList.add('d-none');
+        document.getElementById('contenidoCaso').classList.remove('d-none');
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al cargar el caso');
+    }
+}
+
+function mostrarCaso(caso) {
+    document.getElementById('casoTitulo').textContent = caso.titulo;
+    document.getElementById('casoDescripcion').textContent = caso.descripcion;
+    document.getElementById('casoFecha').textContent = new Date(caso.fecha_creacion).toLocaleDateString();
+    document.getElementById('casoEstadoBadge').textContent = caso.estado_nombre || 'Activo';
+    document.getElementById('casoCategoria').textContent = caso.categoria_nombre || 'N/A';
+    document.getElementById('casoUbicacion').textContent = `${caso.ciudad || ''}, ${caso.estado || ''}`;
+    document.getElementById('casoBeneficiario').textContent = caso.usuario_nombre || 'N/A';
+    document.getElementById('casoUbicacionCompleta').textContent = `${caso.direccion || ''}, ${caso.ciudad || ''}, ${caso.estado || ''}`;
+    document.getElementById('casoTelefono').textContent = caso.telefono_contacto || 'N/A';
+    document.getElementById('casoFechaLimite').textContent = caso.fecha_limite ? new Date(caso.fecha_limite).toLocaleDateString() : 'N/A';
+
+    // Progreso
+    const porcentaje = Math.min((caso.monto_recolectado / caso.monto_necesario) * 100, 100);
+    document.getElementById('porcentajeRecaudado').textContent = porcentaje.toFixed(1) + '%';
+    document.getElementById('barraProgreso').style.width = porcentaje + '%';
+    document.getElementById('porcentajeTexto').textContent = porcentaje.toFixed(0) + '%';
+    document.getElementById('montoRecaudado').textContent = '$' + Number(caso.monto_recolectado || 0).toLocaleString();
+    document.getElementById('montoMeta').textContent = '$' + Number(caso.monto_necesario).toLocaleString();
+    document.getElementById('montoFaltante').textContent = '$' + (Number(caso.monto_necesario) - Number(caso.monto_recolectado || 0)).toLocaleString();
+
+    // Beneficiario
+    document.getElementById('beneficiarioNombre').textContent = caso.usuario_nombre || 'N/A';
+    document.getElementById('beneficiarioEmail').textContent = caso.usuario_email || '';
+    document.getElementById('beneficiarioTelefono').textContent = caso.usuario_telefono || '';
+    if (caso.usuario_foto) {
+        document.getElementById('beneficiarioFoto').src = caso.usuario_foto;
+    }
+    document.getElementById('verPerfilBeneficiario').href = `/adm/usuarios/${caso.id_usuario_beneficiario}/`;
+
+    // Imágenes
+    const carousel = document.getElementById('imagenesCarousel');
+    if (caso.imagen_principal) {
+        carousel.innerHTML = `
+            <div class="carousel-item active">
+                <img src="${caso.imagen_principal}" class="d-block w-100" style="height: 400px; object-fit: cover;">
+            </div>
+        `;
+    }
+
+    // Botones
+    document.getElementById('btnEditar').onclick = () => window.location.href = `/adm/casos/${casoId}/editar/`;
+    document.getElementById('btnEliminar').onclick = eliminarCaso;
+    document.getElementById('btnCambiarEstado').onclick = () => {
+        const modal = new bootstrap.Modal(document.getElementById('modalEstado'));
+        modal.show();
+    };
+}
+
+async function cargarDonaciones() {
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/donaciones/?caso=${casoId}`);
+        const data = await response.json();
+        const donaciones = data.results || data;
+        
+        document.getElementById('totalDonaciones').textContent = donaciones.length;
+        
+        const lista = document.getElementById('listaDonaciones');
+        if (donaciones.length === 0) {
+            lista.innerHTML = '<p class="text-muted text-center">No hay donaciones aún</p>';
+            return;
+        }
+
+        lista.innerHTML = donaciones.map(d => `
+            <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+                <div>
+                    <strong>${d.donante_nombre || 'Anónimo'}</strong>
+                    <p class="text-muted mb-0 small">${new Date(d.fecha_compromiso).toLocaleDateString()}</p>
+                </div>
+                <div class="text-end">
+                    <strong class="text-primary">$${Number(d.monto).toLocaleString()}</strong>
+                    <p class="mb-0 small">
+                        <span class="badge bg-${d.estado_donacion === 'completada' ? 'success' : 'warning'}">
+                            ${d.estado_donacion}
+                        </span>
+                    </p>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error al cargar donaciones:', error);
+    }
+}
+
+async function guardarCambioEstado() {
+    const nuevoEstado = document.getElementById('nuevoEstado').value;
+    const motivo = document.getElementById('motivoCambio').value;
+    
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/casos/${casoId}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+                id_estado: parseInt(nuevoEstado),
+                motivo_cambio_estado: motivo
+            })
+        });
+        
+        if (response.ok) {
+            alert('Estado actualizado correctamente');
+            location.reload();
+        } else {
+            alert('Error al actualizar el estado');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al actualizar el estado');
+    }
+}
+
+async function eliminarCaso() {
+    if (!confirm('¿Estás seguro de eliminar este caso? Esta acción no se puede deshacer.')) return;
+    
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/casos/${casoId}/`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            alert('Caso eliminado correctamente');
+            window.location.href = '/adm/casos/';
+        } else {
+            alert('Error al eliminar el caso');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al eliminar el caso');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', cargarCaso);
+</script>
+{% endblock %}

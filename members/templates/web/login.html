@@ -3,163 +3,366 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Aqui Estoy!</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Iniciar Sesión - Aquí Estoy!</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .login-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+
+        .login-body {
+            padding: 40px 30px;
+        }
+
+        .form-floating {
+            margin-bottom: 20px;
+        }
+
+        .form-floating > .form-control {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 15px;
+            height: 60px;
+            transition: all 0.3s ease;
+        }
+
+        .form-floating > .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-floating > label {
+            color: #666;
+            padding: 18px 15px;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 25px 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .divider span {
+            padding: 0 15px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .register-link a {
+            color: #667eea;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .register-link a:hover {
+            color: #764ba2;
+        }
+
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #999;
+            z-index: 10;
+        }
+
+        .password-toggle:hover {
+            color: #667eea;
+        }
+
+        .form-check {
+            margin: 15px 0;
+        }
+
+        .form-check-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .spinner-border-sm {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-sky-50 to-blue-100 min-h-screen">
-    <div class="flex items-center justify-center min-h-screen px-4">
-        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-sky-800">¡Aqui Estoy!</h1>
-                <p class="text-sky-600 mt-2">Inicia sesión en tu cuenta</p>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="bi bi-heart-fill" style="font-size: 48px;"></i>
+                <h1>Aquí Estoy!</h1>
+                <p>Bienvenido de vuelta</p>
             </div>
 
-            <form id="loginForm" class="space-y-6">
+            <div class="login-body">
                 <div id="alertContainer"></div>
 
-                <div>
-                    <label class="block text-sm font-medium text-sky-700 mb-2">Correo Electrónico</label>
-                    <input type="email" id="correo" required
-                           class="w-full rounded-md border border-sky-200 bg-blue-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                           placeholder="tu@correo.com">
+                <form id="loginForm">
+                    <div class="form-floating">
+                        <input type="email" class="form-control" id="correo" placeholder="correo@ejemplo.com" required>
+                        <label for="correo"><i class="bi bi-envelope me-2"></i>Correo electrónico</label>
+                    </div>
+
+                    <div class="form-floating" style="position: relative;">
+                        <input type="password" class="form-control" id="contrasena" placeholder="Contraseña" required>
+                        <label for="contrasena"><i class="bi bi-lock me-2"></i>Contraseña</label>
+                        <i class="bi bi-eye password-toggle" id="togglePassword"></i>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="recordar">
+                            <label class="form-check-label" for="recordar">
+                                Recordarme
+                            </label>
+                        </div>
+                        <a href="#" class="text-decoration-none" style="font-size: 14px; color: #667eea;">
+                            ¿Olvidaste tu contraseña?
+                        </a>
+                    </div>
+
+                    <button type="submit" class="btn btn-login" id="btnLogin">
+                        <span id="btnText">Iniciar Sesión</span>
+                        <span id="btnSpinner" class="d-none">
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            Iniciando...
+                        </span>
+                    </button>
+                </form>
+
+                <div class="divider">
+                    <span>o</span>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-sky-700 mb-2">Contraseña</label>
-                    <input type="password" id="contrasena" required
-                           class="w-full rounded-md border border-sky-200 bg-blue-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                           placeholder="••••••••">
+                <div class="register-link">
+                    ¿No tienes una cuenta? 
+                    <a href="/register/">Regístrate aquí</a>
                 </div>
-
-                <button type="submit" id="btnLogin"
-                        class="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white font-semibold py-3 rounded-md shadow-md transition">
-                    <span id="loginText">Entrar</span>
-                    <span id="loginSpinner" class="hidden">
-                        <svg class="animate-spin h-5 w-5 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Entrando...
-                    </span>
-                </button>
-            </form>
-
-            <p class="text-center text-sm text-sky-600 mt-6">
-                ¿No tienes cuenta? 
-                <a href="/web/register/" class="font-semibold text-sky-700 hover:text-sky-900">Regístrate aquí</a>
-            </p>
+            </div>
         </div>
     </div>
 
     <script>
-        const API_URL = 'http://127.0.0.1:8000/api';
+        const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
+        // Mostrar/ocultar contraseña
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('contrasena');
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            this.classList.toggle('bi-eye');
+            this.classList.toggle('bi-eye-slash');
+        });
+
+        // Función para mostrar alertas
+        function mostrarAlerta(mensaje, tipo = 'danger') {
+            const alertContainer = document.getElementById('alertContainer');
+            alertContainer.innerHTML = `
+                <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                    <i class="bi bi-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'}-fill me-2"></i>
+                    ${mensaje}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+
+        // Manejar envío del formulario
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const btnLogin = document.getElementById('btnLogin');
-            const loginText = document.getElementById('loginText');
-            const loginSpinner = document.getElementById('loginSpinner');
-
-            // Mostrar spinner
-            btnLogin.disabled = true;
-            loginText.classList.add('hidden');
-            loginSpinner.classList.remove('hidden');
-
             const correo = document.getElementById('correo').value.trim();
             const contrasena = document.getElementById('contrasena').value;
+            const recordar = document.getElementById('recordar').checked;
 
-            console.log('Intentando login con:', { correo }); // Debug
+            if (!correo || !contrasena) {
+                mostrarAlerta('Por favor completa todos los campos');
+                return;
+            }
+
+            // Mostrar spinner
+            document.getElementById('btnText').classList.add('d-none');
+            document.getElementById('btnSpinner').classList.remove('d-none');
+            document.getElementById('btnLogin').disabled = true;
 
             try {
-                // OPCIÓN 1: Intentar con /api/auth/token/
-                let response = await fetch(`${API_URL}/auth/token/`, {
+                console.log('Enviando credenciales:', { correo });
+                
+                const response = await fetch(`${API_BASE_URL}/auth/login/`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ correo, contrasena })
+                    body: JSON.stringify({ 
+                        correo, 
+                        password: document.getElementById('contrasena').value  // Cambiar aquí
+                    })
                 });
 
-                console.log('Respuesta de /api/auth/token/:', response.status); // Debug
+                const data = await response.json();
 
-                // Si falla, intentar con /api/token/
-                if (!response.ok) {
-                    console.log('Intentando con /api/token/...'); // Debug
-                    response = await fetch(`${API_URL}/token/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ correo, contrasena })
-                    });
-                    console.log('Respuesta de /api/token/:', response.status); // Debug
-                }
-
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Login exitoso:', data); // Debug
-                    
+                if (response.ok && data.access) {
+                    // Guardar tokens y datos del usuario
                     localStorage.setItem('access_token', data.access);
                     localStorage.setItem('refresh_token', data.refresh);
                     
-                    showAlert('¡Bienvenido!', 'success');
-                    
-                    setTimeout(() => {
-                        window.location.href = '/web/home/';
-                    }, 1000);
-                } else {
-                    const errorData = await response.json();
-                    console.error('Error de login:', errorData); // Debug
-                    
-                    let errorMessage = 'Credenciales incorrectas';
-                    if (errorData.detail) {
-                        errorMessage = errorData.detail;
-                    } else if (errorData.correo) {
-                        errorMessage = `Correo: ${errorData.correo[0]}`;
-                    } else if (errorData.contrasena) {
-                        errorMessage = `Contraseña: ${errorData.contrasena[0]}`;
+                    if (data.user) {
+                        localStorage.setItem('user', JSON.stringify(data.user));
                     }
+
+                    // Si marcó "recordarme", guardar correo
+                    if (recordar) {
+                        localStorage.setItem('correo_guardado', correo);
+                    } else {
+                        localStorage.removeItem('correo_guardado');
+                    }
+
+                    mostrarAlerta('¡Inicio de sesión exitoso! Redirigiendo...', 'success');
+
+                    // Esperar 1 segundo antes de redirigir
+                    setTimeout(() => {
+                        // Redirigir según tipo de usuario
+                        if (data.user && data.user.tipo_usuario === 'Administrador') {
+                            window.location.href = '/adm/'; 
+                        } else {
+                            window.location.href = '/perfil/';
+                        }
+                    }, 1000);
+
+                } else {
+                    // Manejar errores
+                    let mensaje = 'Credenciales incorrectas';
                     
-                    showAlert(errorMessage, 'danger');
-                    
+                    if (data.detail) {
+                        mensaje = data.detail;
+                    } else if (data.error) {
+                        mensaje = data.error;
+                    } else if (data.non_field_errors) {
+                        mensaje = data.non_field_errors[0];
+                    }
+
+                    mostrarAlerta(mensaje);
+
                     // Restaurar botón
-                    btnLogin.disabled = false;
-                    loginText.classList.remove('hidden');
-                    loginSpinner.classList.add('hidden');
+                    document.getElementById('btnText').classList.remove('d-none');
+                    document.getElementById('btnSpinner').classList.add('d-none');
+                    document.getElementById('btnLogin').disabled = false;
                 }
+
             } catch (error) {
-                console.error('Error de conexión:', error); // Debug
-                showAlert('Error de conexión. Verifica que el servidor esté funcionando.', 'danger');
-                
+                console.error('Error:', error);
+                mostrarAlerta('Error de conexión. Por favor intenta de nuevo.');
+
                 // Restaurar botón
-                btnLogin.disabled = false;
-                loginText.classList.remove('hidden');
-                loginSpinner.classList.add('hidden');
+                document.getElementById('btnText').classList.remove('d-none');
+                document.getElementById('btnSpinner').classList.add('d-none');
+                document.getElementById('btnLogin').disabled = false;
             }
         });
 
-        function showAlert(message, type) {
-            const alertContainer = document.getElementById('alertContainer');
-            const colorClass = type === 'danger' 
-                ? 'bg-red-50 text-red-800 border-red-200' 
-                : 'bg-green-50 text-green-800 border-green-200';
-            
-            const icon = type === 'danger'
-                ? '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
-                : '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
-            
-            alertContainer.innerHTML = `
-                <div class="flex items-center p-4 mb-4 rounded-md border ${colorClass} animate-fade-in">
-                    ${icon}
-                    <p class="text-sm font-medium">${message}</p>
-                </div>
-            `;
-            
-            setTimeout(() => {
-                alertContainer.innerHTML = '';
-            }, 5000);
-        }
+        // Cargar correo guardado al cargar la página
+        window.addEventListener('DOMContentLoaded', () => {
+            const correoGuardado = localStorage.getItem('correo_guardado');
+            if (correoGuardado) {
+                document.getElementById('correo').value = correoGuardado;
+                document.getElementById('recordar').checked = true;
+            }
+
+            // Si ya está logueado, redirigir
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                if (user.tipo_usuario === 'Administrador') {
+                    window.location.href = '/adm/';
+                } else {
+                    window.location.href = '/perfil/';
+                }
+            }
+        });
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

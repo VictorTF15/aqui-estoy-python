@@ -1,0 +1,290 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Reportes - Admin{% endblock %}
+{% block page_title %}Gestión de Reportes{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-danger bg-opacity-10 text-danger">
+                        <i class="bi bi-flag-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Total Reportes</h6>
+                        <h3 class="mb-0" id="totalReportes">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-clock-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Pendientes</h6>
+                        <h3 class="mb-0" id="reportesPendientes">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Resueltos</h6>
+                        <h3 class="mb-0" id="reportesResueltos">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">En Revisión</h6>
+                        <h3 class="mb-0" id="reportesRevision">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Estado</label>
+                    <select id="filtroEstado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="1">Pendiente</option>
+                        <option value="2">En Revisión</option>
+                        <option value="3">Resuelto</option>
+                        <option value="4">Rechazado</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Tipo</label>
+                    <select id="filtroTipo" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="caso">Caso</option>
+                        <option value="usuario">Usuario</option>
+                        <option value="donacion">Donación</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Motivo</label>
+                    <select id="filtroMotivo" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="fraude">Fraude</option>
+                        <option value="contenido_inapropiado">Contenido Inapropiado</option>
+                        <option value="informacion_falsa">Información Falsa</option>
+                        <option value="spam">Spam</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button onclick="aplicarFiltros()" class="btn btn-primary w-100">
+                        <i class="bi bi-filter"></i> Aplicar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Lista de Reportes</h5>
+        </div>
+        <div class="card-body">
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+
+            <div id="tablaReportes" class="table-responsive d-none">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Reportado por</th>
+                            <th>Tipo</th>
+                            <th>Elemento</th>
+                            <th>Motivo</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaReportes">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="sinResultados" class="text-center py-5 d-none">
+                <i class="bi bi-flag display-1 text-muted"></i>
+                <p class="text-muted mt-3">No hay reportes</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let reportes = [];
+
+async function cargarReportes(filtros = {}) {
+    const loading = document.getElementById('loading');
+    const tabla = document.getElementById('tablaReportes');
+    const sinResultados = document.getElementById('sinResultados');
+
+    loading.classList.remove('d-none');
+    tabla.classList.add('d-none');
+    sinResultados.classList.add('d-none');
+
+    try {
+        const params = new URLSearchParams(filtros);
+        const response = await fetchWithAuth(`${API_BASE_URL}/reportes/?${params}`);
+        const data = await response.json();
+        reportes = data.results || data;
+
+        loading.classList.add('d-none');
+
+        if (reportes.length === 0) {
+            sinResultados.classList.remove('d-none');
+        } else {
+            mostrarReportes(reportes);
+            tabla.classList.remove('d-none');
+            calcularEstadisticas(reportes);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        loading.classList.add('d-none');
+        alert('Error al cargar los reportes');
+    }
+}
+
+function mostrarReportes(reportes) {
+    const tbody = document.getElementById('listaReportes');
+    tbody.innerHTML = reportes.map(reporte => {
+        const estadoClass = {
+            'Pendiente': 'warning',
+            'En Revisión': 'info',
+            'Resuelto': 'success',
+            'Rechazado': 'danger'
+        };
+
+        const motivoClass = {
+            'fraude': 'danger',
+            'contenido_inapropiado': 'warning',
+            'informacion_falsa': 'warning',
+            'spam': 'secondary',
+            'otro': 'info'
+        };
+
+        return `
+            <tr>
+                <td>
+                    <div>
+                        <strong>${reporte.reportante_nombre || 'Usuario'}</strong>
+                        <br><small class="text-muted">${reporte.reportante_email || ''}</small>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-secondary">${reporte.tipo_contenido || 'N/A'}</span>
+                </td>
+                <td>
+                    <small>${reporte.elemento_reportado || 'N/A'}</small>
+                </td>
+                <td>
+                    <span class="badge bg-${motivoClass[reporte.motivo] || 'secondary'}">
+                        ${reporte.motivo}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge bg-${estadoClass[reporte.estado_nombre] || 'secondary'}">
+                        ${reporte.estado_nombre || 'Pendiente'}
+                    </span>
+                </td>
+                <td>${new Date(reporte.fecha_reporte).toLocaleDateString()}</td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                        <a href="/adm/reportes/${reporte.id}/" class="btn btn-outline-primary" title="Ver">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <button onclick="cambiarEstadoReporte(${reporte.id})" 
+                                class="btn btn-outline-warning" title="Cambiar Estado">
+                            <i class="bi bi-arrow-repeat"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function calcularEstadisticas(reportes) {
+    document.getElementById('totalReportes').textContent = reportes.length;
+    document.getElementById('reportesPendientes').textContent = 
+        reportes.filter(r => r.estado_nombre === 'Pendiente').length;
+    document.getElementById('reportesResueltos').textContent = 
+        reportes.filter(r => r.estado_nombre === 'Resuelto').length;
+    document.getElementById('reportesRevision').textContent = 
+        reportes.filter(r => r.estado_nombre === 'En Revisión').length;
+}
+
+function aplicarFiltros() {
+    const filtros = {};
+    
+    const estado = document.getElementById('filtroEstado').value;
+    if (estado) filtros.estado = estado;
+    
+    const tipo = document.getElementById('filtroTipo').value;
+    if (tipo) filtros.tipo_contenido = tipo;
+    
+    const motivo = document.getElementById('filtroMotivo').value;
+    if (motivo) filtros.motivo = motivo;
+    
+    cargarReportes(filtros);
+}
+
+async function cambiarEstadoReporte(reporteId) {
+    const nuevoEstado = prompt('Nuevo estado:\n1 = Pendiente\n2 = En Revisión\n3 = Resuelto\n4 = Rechazado');
+    
+    if (!nuevoEstado) return;
+    
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/reportes/${reporteId}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ id_estado: parseInt(nuevoEstado) })
+        });
+        
+        if (response.ok) {
+            alert('Estado actualizado');
+            cargarReportes();
+        } else {
+            alert('Error al actualizar');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al actualizar');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    cargarReportes();
+});
+</script>
+{% endblock %}

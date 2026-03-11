@@ -1,0 +1,288 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Donaciones - Admin{% endblock %}
+{% block page_title %}Gestión de Donaciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-gift-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Total Donaciones</h6>
+                        <h3 class="mb-0" id="totalDonaciones">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Completadas</h6>
+                        <h3 class="mb-0" id="donacionesCompletadas">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-clock-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Pendientes</h6>
+                        <h3 class="mb-0" id="donacionesPendientes">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Monto Total</h6>
+                        <h3 class="mb-0" id="montoTotal">$0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Estado</label>
+                    <select id="filtroEstado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="completada">Completadas</option>
+                        <option value="pendiente">Pendientes</option>
+                        <option value="cancelada">Canceladas</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Tipo</label>
+                    <select id="filtroTipo" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="monetaria">Monetaria</option>
+                        <option value="especie">En Especie</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Fecha Desde</label>
+                    <input type="date" id="fechaDesde" class="form-control">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button onclick="aplicarFiltros()" class="btn btn-primary w-100">
+                        <i class="bi bi-filter"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Lista de Donaciones</h5>
+        </div>
+        <div class="card-body">
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+
+            <div id="tablaDonaciones" class="table-responsive d-none">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Donante</th>
+                            <th>Caso</th>
+                            <th>Tipo</th>
+                            <th>Monto/Descripción</th>
+                            <th>Estado</th>
+                            <th>Fecha Compromiso</th>
+                            <th>Fecha Entrega</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaDonaciones">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="sinResultados" class="text-center py-5 d-none">
+                <i class="bi bi-gift-x display-1 text-muted"></i>
+                <p class="text-muted mt-3">No se encontraron donaciones</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let donaciones = [];
+
+async function cargarDonaciones(filtros = {}) {
+    const loading = document.getElementById('loading');
+    const tabla = document.getElementById('tablaDonaciones');
+    const sinResultados = document.getElementById('sinResultados');
+
+    loading.classList.remove('d-none');
+    tabla.classList.add('d-none');
+    sinResultados.classList.add('d-none');
+
+    try {
+        const params = new URLSearchParams(filtros);
+        const response = await fetchWithAuth(`${API_BASE_URL}/donaciones/?${params}`);
+        const data = await response.json();
+        donaciones = data.results || data;
+
+        loading.classList.add('d-none');
+
+        if (donaciones.length === 0) {
+            sinResultados.classList.remove('d-none');
+        } else {
+            mostrarDonaciones(donaciones);
+            tabla.classList.remove('d-none');
+            calcularEstadisticas(donaciones);
+        }
+    } catch (error) {
+        console.error('Error al cargar donaciones:', error);
+        loading.classList.add('d-none');
+        alert('Error al cargar las donaciones');
+    }
+}
+
+function mostrarDonaciones(donaciones) {
+    const tbody = document.getElementById('listaDonaciones');
+    tbody.innerHTML = donaciones.map(donacion => {
+        const estadoClass = {
+            'completada': 'success',
+            'pendiente': 'warning',
+            'cancelada': 'danger'
+        };
+
+        const tipoClass = {
+            'monetaria': 'primary',
+            'especie': 'info'
+        };
+
+        return `
+            <tr>
+                <td>
+                    <div>
+                        <div class="fw-medium">${donacion.donante_nombre || 'Anónimo'}</div>
+                        <small class="text-muted">${donacion.donante_email || ''}</small>
+                    </div>
+                </td>
+                <td>
+                    <div>
+                        <div>${donacion.caso_titulo || 'N/A'}</div>
+                        <small class="text-muted">ID: ${donacion.id_caso}</small>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-${tipoClass[donacion.tipo_donacion] || 'secondary'}">
+                        ${donacion.tipo_donacion}
+                    </span>
+                </td>
+                <td>
+                    ${donacion.tipo_donacion === 'monetaria' ?
+                        `<strong class="text-primary">$${Number(donacion.monto || 0).toLocaleString()}</strong>` :
+                        `<span class="text-muted">${donacion.descripcion_especie || 'N/A'}</span>`
+                    }
+                </td>
+                <td>
+                    <span class="badge bg-${estadoClass[donacion.estado_donacion] || 'secondary'}">
+                        ${donacion.estado_donacion}
+                    </span>
+                </td>
+                <td>${new Date(donacion.fecha_compromiso).toLocaleDateString()}</td>
+                <td>${donacion.fecha_entrega ? new Date(donacion.fecha_entrega).toLocaleDateString() : '-'}</td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                        <a href="/adm/donaciones/${donacion.id}/" class="btn btn-outline-primary" title="Ver">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <button onclick="cambiarEstado(${donacion.id})" class="btn btn-outline-warning" title="Cambiar Estado">
+                            <i class="bi bi-arrow-repeat"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function calcularEstadisticas(donaciones) {
+    document.getElementById('totalDonaciones').textContent = donaciones.length;
+    
+    const completadas = donaciones.filter(d => d.estado_donacion === 'completada').length;
+    document.getElementById('donacionesCompletadas').textContent = completadas;
+    
+    const pendientes = donaciones.filter(d => d.estado_donacion === 'pendiente').length;
+    document.getElementById('donacionesPendientes').textContent = pendientes;
+    
+    const total = donaciones
+        .filter(d => d.tipo_donacion === 'monetaria')
+        .reduce((sum, d) => sum + (Number(d.monto) || 0), 0);
+    document.getElementById('montoTotal').textContent = '$' + total.toLocaleString();
+}
+
+function aplicarFiltros() {
+    const filtros = {};
+    
+    const estado = document.getElementById('filtroEstado').value;
+    if (estado) filtros.estado_donacion = estado;
+    
+    const tipo = document.getElementById('filtroTipo').value;
+    if (tipo) filtros.tipo_donacion = tipo;
+    
+    const fechaDesde = document.getElementById('fechaDesde').value;
+    if (fechaDesde) filtros.fecha_desde = fechaDesde;
+    
+    cargarDonaciones(filtros);
+}
+
+async function cambiarEstado(donacionId) {
+    const nuevoEstado = prompt('Nuevo estado (completada/pendiente/cancelada):');
+    if (!nuevoEstado) return;
+    
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/donaciones/${donacionId}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ estado_donacion: nuevoEstado })
+        });
+        
+        if (response.ok) {
+            alert('Estado actualizado');
+            cargarDonaciones();
+        } else {
+            alert('Error al actualizar');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al actualizar');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    cargarDonaciones();
+});
+</script>
+{% endblock %}

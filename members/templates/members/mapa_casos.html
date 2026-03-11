@@ -330,13 +330,14 @@
   <div class="flex items-center justify-between mb-4">
     <div>
       <h1 class="text-2xl font-bold text-slate-800">Mapa de Casos</h1>
-      <p class="text-sm text-slate-500 mt-1">Explora casos de ayuda en Puebla</p>
+      <p class="text-sm text-slate-500 mt-1">Explora casos de ayuda en tu región</p>
     </div>
     <a href="{% url 'members:lista_casos' %}" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition font-medium text-sm">
       Vista de Lista
     </a>
   </div>
 
+  <!-- Estadísticas -->
   <div class="estadisticas-mapa">
     <div class="stat-item">
       <span id="totalCasos" class="stat-numero">0</span>
@@ -356,20 +357,15 @@
     </div>
   </div>
 
+  <!-- Filtros -->
   <div class="filtros-container">
     <div class="filtro-grupo">
       <select id="filtroCategorias" class="filtro-select">
         <option value="">Todas las categorías</option>
-        {% for cat in categorias %}
-          <option value="{{ cat.id }}">{{ cat.nombre }}</option>
-        {% endfor %}
       </select>
 
       <select id="filtroEstado" class="filtro-select">
         <option value="">Todos los estados</option>
-        {% for estado in estados %}
-          <option value="{{ estado.id }}">{{ estado.nombre }}</option>
-        {% endfor %}
       </select>
 
       <button onclick="aplicarFiltros()" class="filtro-btn btn-aplicar">
@@ -383,6 +379,7 @@
   </div>
 </div>
 
+<!-- Mapa -->
 <div style="position: relative;">
   <div id="loadingOverlay" class="loading-overlay" style="display: none;">
     <div class="loading-content">
@@ -402,11 +399,31 @@
 </div>
 
 <script>
+const API_BASE_URL = 'http://127.0.0.1:8000/api';
+const ACCESS_TOKEN = localStorage.getItem('access_token') || '{{ request.session.access_token|default:"" }}';
+
 let map;
 let markers = [];
 let casosData = [];
 let infoWindow;
 let userLocationMarker = null;
+
+// Función para hacer fetch con autenticación
+async function fetchWithAuth(url, options = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers
+  };
+
+  if (ACCESS_TOKEN) {
+    headers['Authorization'] = `Bearer ${ACCESS_TOKEN}`;
+  }
+
+  return fetch(url, {
+    ...options,
+    headers
+  });
+}
 
 function initMap() {
   console.log('🗺️ Inicializando mapa...');
@@ -441,9 +458,47 @@ function initMap() {
   });
 
   infoWindow = new google.maps.InfoWindow();
-  console.log('✓ Mapa inicializado correctamente');
+  console.log('✓ Mapa inicializado');
   
+  cargarCategorias();
+  cargarEstados();
   cargarCasos();
+}
+
+async function cargarCategorias() {
+  try {
+    const response = await fetchWithAuth(`${API_BASE_URL}/categorias/`);
+    const data = await response.json();
+    const categorias = data.results || data;
+    
+    const select = document.getElementById('filtroCategorias');
+    categorias.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat.id;
+      option.textContent = cat.nombre;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.error('Error al cargar categorías:', error);
+  }
+}
+
+async function cargarEstados() {
+  try {
+    const response = await fetchWithAuth(`${API_BASE_URL}/estados/`);
+    const data = await response.json();
+    const estados = data.results || data;
+    
+    const select = document.getElementById('filtroEstado');
+    estados.forEach(estado => {
+      const option = document.createElement('option');
+      option.value = estado.id;
+      option.textContent = estado.nombre;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.error('Error al cargar estados:', error);
+  }
 }
 
 function mostrarLoading() {
@@ -455,46 +510,45 @@ function ocultarLoading() {
 }
 
 async function cargarCasos() {
-  console.log('📡 Iniciando carga de casos...');
+  console.log('📡 Cargando casos...');
   mostrarLoading();
   
   const categoria = document.getElementById('filtroCategorias').value;
   const estado = document.getElementById('filtroEstado').value;
   
-  let url = '{% url "members:api_casos_mapa" %}';
+  let url = `${API_BASE_URL}/casos/`;
   const params = new URLSearchParams();
-  if (categoria) params.append('categoria', categoria);
-  if (estado) params.append('estado', estado);
+  
+  if (categoria) params.append('id_categoria', categoria);
+  if (estado) params.append('id_estado', estado);
+  
   if (params.toString()) url += '?' + params.toString();
 
-  console.log('🔗 URL de la API:', url);
-
   try {
-    const response = await fetch(url);
-    console.log('📥 Response status:', response.status);
-    console.log('📥 Response ok:', response.ok);
-    
+    const response = await fetchWithAuth(url);
     const data = await response.json();
-    console.log('📦 Datos recibidos:', data);
-    console.log('📦 Success:', data.success);
-    console.log('📦 Total casos:', data.total);
-    console.log('📦 Casos array:', data.casos);
+    const casos = data.results || data;
     
-    if (!data.success) {
-      console.error('❌ Error en la API:', data.error);
-      alert('Error al cargar casos: ' + (data.error || 'Error desconocido'));
-      return;
-    }
+    // Filtrar casos con coordenadas válidas
+    casosData = casos.filter(caso => 
+      caso.latitud && 
+      caso.longitud && 
+      !isNaN(parseFloat(caso.latitud)) && 
+      !isNaN(parseFloat(caso.longitud))
+    ).map(caso => ({
+      id: caso.id,
+      titulo: caso.titulo,
+      descripcion: caso.descripcion,
+      lat: parseFloat(caso.latitud),
+      lng: parseFloat(caso.longitud),
+      estado: caso.estado_nombre || 'Activo',
+      colonia: caso.colonia || 'N/A',
+      beneficiario: caso.beneficiario_nombre || 'N/A',
+      imagen: caso.imagen_principal || null,
+      url: `/casos/${caso.id}/`
+    }));
     
-    casosData = data.casos;
-    console.log(`✓ ${casosData.length} casos cargados en memoria`);
-    
-    if (casosData.length === 0) {
-      console.warn('⚠️ No hay casos para mostrar en el mapa');
-      alert('No se encontraron casos con coordenadas válidas');
-    } else {
-      console.log('📍 Casos a mostrar:', casosData);
-    }
+    console.log(`✓ ${casosData.length} casos con coordenadas válidas`);
     
     limpiarMarcadores();
     agregarMarcadores(casosData);
@@ -504,81 +558,54 @@ async function cargarCasos() {
       ajustarVistaMapa(casosData);
     }
   } catch (error) {
-    console.error('❌ Error completo:', error);
-    console.error('❌ Error stack:', error.stack);
-    alert('Error al cargar los casos del mapa: ' + error.message);
+    console.error('❌ Error:', error);
+    alert('Error al cargar los casos: ' + error.message);
   } finally {
     ocultarLoading();
-    console.log('✓ Proceso de carga finalizado');
   }
 }
 
 function limpiarMarcadores() {
-  console.log('🧹 Limpiando', markers.length, 'marcadores...');
   markers.forEach(marker => marker.setMap(null));
   markers = [];
-  console.log('✓ Marcadores limpiados');
 }
 
 function agregarMarcadores(casos) {
-  console.log(`📍 Agregando ${casos.length} marcadores al mapa...`);
+  console.log(`📍 Agregando ${casos.length} marcadores...`);
   const bounds = new google.maps.LatLngBounds();
 
   casos.forEach((caso, index) => {
-    console.log(`\n🔵 Marcador ${index + 1}/${casos.length}:`);
-    console.log('  ID:', caso.id);
-    console.log('  Título:', caso.titulo);
-    console.log('  Latitud:', caso.lat, 'tipo:', typeof caso.lat);
-    console.log('  Longitud:', caso.lng, 'tipo:', typeof caso.lng);
-    console.log('  Colonia:', caso.colonia);
-    console.log('  Estado:', caso.estado);
-    
     const position = { lat: caso.lat, lng: caso.lng };
-    console.log('  Position object:', position);
     
-    try {
-      const marker = new google.maps.Marker({
-        position: position,
-        map: map,
-        title: caso.titulo,
-        animation: google.maps.Animation.DROP,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 12,
-          fillColor: getColorPorEstado(caso.estado),
-          fillOpacity: 1,
-          strokeColor: '#ffffff',
-          strokeWeight: 3
-        }
-      });
+    const marker = new google.maps.Marker({
+      position: position,
+      map: map,
+      title: caso.titulo,
+      animation: google.maps.Animation.DROP,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 12,
+        fillColor: getColorPorEstado(caso.estado),
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 3
+      }
+    });
 
-      marker.addListener('click', () => {
-        console.log('🖱️ Click en marcador:', caso.titulo);
-        infoWindow.setContent(crearPopupHTML(caso));
-        infoWindow.open(map, marker);
-      });
+    marker.addListener('click', () => {
+      infoWindow.setContent(crearPopupHTML(caso));
+      infoWindow.open(map, marker);
+    });
 
-      markers.push(marker);
-      bounds.extend(position);
-      console.log('  ✓ Marcador agregado correctamente');
-    } catch (error) {
-      console.error('  ❌ Error al crear marcador:', error);
-    }
+    markers.push(marker);
+    bounds.extend(position);
   });
 
-  console.log(`\n✓ Total de ${markers.length} marcadores agregados al mapa`);
-
   if (casos.length > 0 && !userLocationMarker) {
-    console.log('🗺️ Ajustando vista del mapa...');
     map.fitBounds(bounds);
     
     const listener = google.maps.event.addListener(map, "idle", function() {
-      const zoom = map.getZoom();
-      console.log('🔍 Zoom actual:', zoom);
-      if (zoom > 15) {
-        console.log('🔍 Ajustando zoom a 15');
-        map.setZoom(15);
-      }
+      if (map.getZoom() > 15) map.setZoom(15);
       google.maps.event.removeListener(listener);
     });
   }
@@ -591,17 +618,12 @@ function getColorPorEstado(estado) {
     'Completado': '#3b82f6',
     'Cerrado': '#ef4444'
   };
-  const color = colores[estado] || '#6b7280';
-  console.log(`  🎨 Color para estado "${estado}":`, color);
-  return color;
+  return colores[estado] || '#6b7280';
 }
 
 function ajustarVistaMapa(casos) {
-  console.log('🗺️ Ajustando vista del mapa con', casos.length, 'casos...');
   const bounds = new google.maps.LatLngBounds();
-  casos.forEach(caso => {
-    bounds.extend({ lat: caso.lat, lng: caso.lng });
-  });
+  casos.forEach(caso => bounds.extend({ lat: caso.lat, lng: caso.lng }));
   
   if (userLocationMarker) {
     bounds.extend(userLocationMarker.getPosition());
@@ -610,10 +632,7 @@ function ajustarVistaMapa(casos) {
   map.fitBounds(bounds);
   
   const zoom = map.getZoom();
-  if (zoom > 15) {
-    map.setZoom(15);
-  }
-  console.log('✓ Vista del mapa ajustada');
+  if (zoom > 15) map.setZoom(15);
 }
 
 function crearPopupHTML(caso) {
@@ -645,7 +664,6 @@ function crearPopupHTML(caso) {
 }
 
 function actualizarEstadisticas(casos) {
-  console.log('📊 Actualizando estadísticas...');
   const total = casos.length;
   const activos = casos.filter(c => c.estado === 'Activo').length;
   const pendientes = casos.filter(c => c.estado === 'Pendiente').length;
@@ -654,31 +672,22 @@ function actualizarEstadisticas(casos) {
   document.getElementById('casosActivos').textContent = activos;
   document.getElementById('casosPendientes').textContent = pendientes;
   document.getElementById('casosVisibles').textContent = total;
-  
-  console.log('  Total:', total);
-  console.log('  Activos:', activos);
-  console.log('  Pendientes:', pendientes);
-  console.log('✓ Estadísticas actualizadas');
 }
 
 function aplicarFiltros() {
-  console.log('🔍 Aplicando filtros...');
   cargarCasos();
 }
 
 function limpiarFiltros() {
-  console.log('🧹 Limpiando filtros...');
   document.getElementById('filtroCategorias').value = '';
   document.getElementById('filtroEstado').value = '';
   cargarCasos();
 }
 
 function obtenerUbicacion() {
-  console.log('📍 Obteniendo ubicación del usuario...');
   const btnUbicacion = document.getElementById('btnUbicacion');
   
   if (!navigator.geolocation) {
-    console.error('❌ Geolocalización no soportada');
     alert('Tu navegador no soporta geolocalización');
     return;
   }
@@ -687,7 +696,6 @@ function obtenerUbicacion() {
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      console.log('✓ Ubicación obtenida:', position.coords);
       const userLocation = {
         lat: position.coords.latitude,
         lng: position.coords.longitude
@@ -712,17 +720,6 @@ function obtenerUbicacion() {
         animation: google.maps.Animation.DROP
       });
 
-      const circle = new google.maps.Circle({
-        map: map,
-        radius: 50,
-        fillColor: '#3b82f6',
-        fillOpacity: 0.15,
-        strokeColor: '#3b82f6',
-        strokeOpacity: 0.3,
-        strokeWeight: 1,
-        center: userLocation
-      });
-
       userLocationMarker.addListener('click', () => {
         infoWindow.setContent(`
           <div style="padding: 12px; text-align: center;">
@@ -738,28 +735,15 @@ function obtenerUbicacion() {
       map.setZoom(15);
 
       btnUbicacion.classList.remove('loading');
-      console.log('✓ Marcador de ubicación agregado');
 
       setTimeout(() => {
-        const bounds = new google.maps.LatLngBounds();
-        bounds.extend(userLocation);
-        
-        casosData.forEach(caso => {
-          bounds.extend({ lat: caso.lat, lng: caso.lng });
-        });
-        
-        map.fitBounds(bounds);
-        
-        const listener = google.maps.event.addListener(map, "idle", function() {
-          const zoom = map.getZoom();
-          if (zoom > 14) map.setZoom(14);
-          google.maps.event.removeListener(listener);
-        });
+        if (casosData.length > 0) {
+          ajustarVistaMapa(casosData);
+        }
       }, 2000);
     },
     (error) => {
       btnUbicacion.classList.remove('loading');
-      console.error('❌ Error al obtener ubicación:', error);
       
       let mensaje = 'No se pudo obtener tu ubicación. ';
       switch(error.code) {
@@ -786,7 +770,6 @@ function obtenerUbicacion() {
 }
 
 window.initMap = initMap;
-console.log('✓ Script de mapa cargado, esperando inicialización...');
 </script>
 
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDuurrB-se5p4d3chPoKXTtDUcNpf9iuHA&callback=initMap&libraries=places"></script>

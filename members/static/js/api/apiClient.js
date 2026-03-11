@@ -29,7 +29,7 @@ const apiClient = {
                     return await fetch(url, { ...options, headers });
                 } else {
                     // Redirigir al login
-                    window.location.href = '/web/login/';
+                    window.location.href = '/login/';
                     throw new Error('Sesión expirada');
                 }
             }

@@ -1,0 +1,131 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}{{ usuario.nombres }} {{ usuario.apellido_paterno }} - Admin{% endblock %}
+{% block page_title %}Detalle del Usuario{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if usuario.imagen_perfil %}
+                        <img src="{{ usuario.imagen_perfil }}" alt="{{ usuario.nombres }}" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-center mb-3" style="width: 120px; height: 120px; font-size: 48px;">
+                            {{ usuario.nombres|slice:":1" }}{{ usuario.apellido_paterno|slice:":1" }}
+                        </div>
+                    {% endif %}
+                    
+                    <h4>{{ usuario.nombres }} {{ usuario.apellido_paterno }}</h4>
+                    <p class="text-muted">{{ usuario.id_tipo_usuario.nombre }}</p>
+                    
+                    <span class="badge {% if usuario.esta_activo %}bg-success{% else %}bg-danger{% endif %} mb-3">
+                        {% if usuario.esta_activo %}Activo{% else %}Inactivo{% endif %}
+                    </span>
+                    
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Correo:</span>
+                            <strong>{{ usuario.correo }}</strong>
+                        </div>
+                        {% if usuario.telefono %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Teléfono:</span>
+                            <strong>{{ usuario.telefono }}</strong>
+                        </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Registro:</span>
+                            <strong>{{ usuario.fecha_registro|date:"d/m/Y" }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Casos como Beneficiario ({{ total_casos }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if casos_beneficiario %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Título</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for caso in casos_beneficiario %}
+                                    <tr>
+                                        <td>{{ caso.titulo }}</td>
+                                        <td><span class="badge bg-success">{{ caso.id_estado.nombre }}</span></td>
+                                        <td>{{ caso.fecha_creacion|date:"d/m/Y" }}</td>
+                                        <td>
+                                            <a href="/adm/casos/{{ caso.id }}/" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i> Ver
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">No tiene casos registrados</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Donaciones Realizadas ({{ total_donaciones }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if donaciones_realizadas %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Caso</th>
+                                        <th>Monto</th>
+                                        <th>Fecha</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for donacion in donaciones_realizadas %}
+                                    <tr>
+                                        <td>{{ donacion.id_caso.titulo }}</td>
+                                        <td>${{ donacion.monto }}</td>
+                                        <td>{{ donacion.fecha_compromiso|date:"d/m/Y" }}</td>
+                                        <td><span class="badge bg-info">{{ donacion.estado_donacion }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">No ha realizado donaciones</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <a href="/adm/usuarios/" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+        <a href="/adm/usuarios/{{ usuario.id }}/editar/" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+    </div>
+</div>
+{% endblock %}

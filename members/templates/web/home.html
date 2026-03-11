@@ -7,103 +7,194 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-sky-800">
-            Bienvenido, <span id="userName"></span>
-        </h1>
-        <p class="text-sky-600 mt-2">Explora casos que necesitan tu apoyo</p>
+        <h1 class="text-3xl font-bold text-sky-800">Bienvenido, <span id="userName"></span></h1>
+        <p class="text-gray-600 mt-2">Explora los casos que necesitan tu ayuda</p>
     </div>
 
-    <!-- Estadísticas -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white rounded-lg shadow-md p-6 border-t-4 border-sky-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-sky-600 font-medium">Casos Activos</p>
-                    <p class="text-3xl font-bold text-sky-800" id="casosActivos">0</p>
-                </div>
-                <div class="bg-sky-100 p-3 rounded-full">
-                    <svg class="w-8 h-8 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                </div>
+    <!-- Filtros -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
+                <select id="filtroCategoria" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500">
+                    <option value="">Todas las categorías</option>
+                </select>
             </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow-md p-6 border-t-4 border-green-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-green-600 font-medium">Mis Donaciones</p>
-                    <p class="text-3xl font-bold text-green-800" id="misDonaciones">0</p>
-                </div>
-                <div class="bg-green-100 p-3 rounded-full">
-                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                    </svg>
-                </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                <select id="filtroEstado" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500">
+                    <option value="">Todos los estados</option>
+                    <option value="activo">Activos</option>
+                    <option value="completado">Completados</option>
+                </select>
             </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow-md p-6 border-t-4 border-blue-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-blue-600 font-medium">Mis Casos</p>
-                    <p class="text-3xl font-bold text-blue-800" id="misCasos">0</p>
-                </div>
-                <div class="bg-blue-100 p-3 rounded-full">
-                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow-md p-6 border-t-4 border-yellow-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-yellow-600 font-medium">Total Donado</p>
-                    <p class="text-3xl font-bold text-yellow-800">$<span id="totalDonado">0</span></p>
-                </div>
-                <div class="bg-yellow-100 p-3 rounded-full">
-                    <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
+            <div class="flex items-end">
+                <button onclick="aplicarFiltros()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-2 rounded-lg">
+                    Aplicar Filtros
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Categorías -->
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold text-sky-800 mb-4">Categorías</h2>
-        <div class="flex flex-wrap gap-2" id="categoriasList">
-            <!-- Categorías dinámicas -->
-        </div>
+    <!-- Loading -->
+    <div id="loading" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
+        <p class="text-gray-600 mt-4">Cargando casos...</p>
     </div>
 
-    <!-- Casos Destacados -->
-    <div class="mb-8">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold text-sky-800">Casos Destacados</h2>
-            <a href="{% url 'members:lista_casos_web' %}" 
-               class="text-sky-600 hover:text-sky-800 font-semibold">
-                Ver todos →
-            </a>
-        </div>
+    <!-- Grid de Casos -->
+    <div id="casosGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+        <!-- Los casos se cargarán aquí dinámicamente -->
+    </div>
 
-        <div id="casosDestacados" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Loading -->
-            <div class="col-span-3 text-center py-12">
-                <svg class="animate-spin h-10 w-10 text-sky-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <p class="text-sky-600 mt-4">Cargando casos...</p>
-            </div>
-        </div>
+    <!-- Sin Resultados -->
+    <div id="noResults" class="text-center py-12 hidden">
+        <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <p class="text-gray-600 mt-4 text-lg">No se encontraron casos</p>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
-<script src="{% static 'js/web/home.js' %}"></script>
+<script src="{% static 'js/api-client.js' %}"></script>
+<script>
+    let casos = [];
+    let categorias = [];
+
+    // Verificar autenticación
+    if (!api.isAuthenticated()) {
+        window.location.href = '/login/';
+    }
+
+    // Cargar nombre de usuario
+    const user = api.getUser();
+    if (user) {
+        document.getElementById('userName').textContent = user.nombres || 'Usuario';
+    }
+
+    // Cargar datos iniciales
+    async function cargarDatos() {
+        try {
+            // Cargar categorías
+            categorias = await api.getCategorias();
+            cargarCategorias();
+
+            // Cargar casos
+            casos = await api.getCasos();
+            mostrarCasos(casos);
+        } catch (error) {
+            console.error('Error al cargar datos:', error);
+            mostrarError('Error al cargar los casos');
+        }
+    }
+
+    function cargarCategorias() {
+        const select = document.getElementById('filtroCategoria');
+        categorias.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.nombre;
+            select.appendChild(option);
+        });
+    }
+
+    function mostrarCasos(casosData) {
+        const grid = document.getElementById('casosGrid');
+        const loading = document.getElementById('loading');
+        const noResults = document.getElementById('noResults');
+
+        loading.classList.add('hidden');
+
+        if (casosData.length === 0) {
+            noResults.classList.remove('hidden');
+            grid.classList.add('hidden');
+            return;
+        }
+
+        noResults.classList.add('hidden');
+        grid.classList.remove('hidden');
+        grid.innerHTML = casosData.map(caso => crearTarjetaCaso(caso)).join('');
+    }
+
+    function crearTarjetaCaso(caso) {
+        const porcentaje = Math.min((caso.monto_recolectado / caso.monto_necesario) * 100, 100);
+        const imagen = caso.imagen_principal || '/static/images/placeholder-caso.jpg';
+
+        return `
+            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300">
+                <img src="${imagen}" alt="${caso.titulo}" class="w-full h-48 object-cover">
+                <div class="p-6">
+                    <div class="flex items-center mb-2">
+                        ${caso.categorias ? caso.categorias.map(cat => `
+                            <span class="text-xs bg-sky-100 text-sky-800 px-2 py-1 rounded-full mr-2">${cat}</span>
+                        `).join('') : ''}
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">${caso.titulo}</h3>
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-3">${caso.descripcion}</p>
+                    
+                    <!-- Beneficiario -->
+                    <div class="flex items-center mb-4 text-sm text-gray-600">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path>
+                        </svg>
+                        <span>${caso.beneficiario || 'Anónimo'}</span>
+                    </div>
+
+                    <!-- Progreso -->
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-600">Recaudado</span>
+                            <span class="font-semibold text-sky-600">${porcentaje.toFixed(0)}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-sky-600 h-2 rounded-full" style="width: ${porcentaje}%"></div>
+                        </div>
+                        <div class="flex justify-between text-sm mt-1">
+                            <span class="text-gray-600">$${Number(caso.monto_recolectado).toLocaleString()}</span>
+                            <span class="text-gray-600">Meta: $${Number(caso.monto_necesario).toLocaleString()}</span>
+                        </div>
+                    </div>
+
+                    <a href="/casos/${caso.id}/" 
+                       class="block w-full text-center bg-sky-600 hover:bg-sky-700 text-white font-semibold py-2 rounded-lg transition">
+                        Ver Detalles
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+
+    async function aplicarFiltros() {
+        const categoriaId = document.getElementById('filtroCategoria').value;
+        const estado = document.getElementById('filtroEstado').value;
+
+        const filtros = {};
+        if (categoriaId) filtros.categoria = categoriaId;
+        if (estado) filtros.estado = estado;
+
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('casosGrid').classList.add('hidden');
+
+        try {
+            const casosFiltrados = await api.getCasos(filtros);
+            mostrarCasos(casosFiltrados);
+        } catch (error) {
+            console.error('Error al filtrar casos:', error);
+        }
+    }
+
+    function mostrarError(mensaje) {
+        const grid = document.getElementById('casosGrid');
+        grid.innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <p class="text-red-600">${mensaje}</p>
+            </div>
+        `;
+        grid.classList.remove('hidden');
+        document.getElementById('loading').classList.add('hidden');
+    }
+
+    // Cargar datos al iniciar
+    cargarDatos();
+</script>
 {% endblock %}

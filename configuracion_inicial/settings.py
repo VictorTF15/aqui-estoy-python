@@ -64,9 +64,9 @@ WSGI_APPLICATION = 'configuracion_inicial.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'aquiestoy',        
-        'USER': 'victxfl',           
-        'PASSWORD': '',            
+        'NAME': 'aquiestoy',
+        'USER': 'victxfl',
+        'PASSWORD': 'Victxf15#',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -146,36 +146,32 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Sistema de Gestión de Casos Sociales - API',
-    'DESCRIPTION': 'API REST para gestión de casos sociales, donaciones y usuarios',
+    'TITLE': 'Aquí Estoy - API REST',
+    'DESCRIPTION': 'API para gestión de casos sociales, donaciones y usuarios',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
-    'SCHEMA_PATH_PREFIX': '/api/',
     'COMPONENT_SPLIT_REQUEST': True,
-    'SERVERS': [
-        {'url': 'http://127.0.0.1:8000', 'description': 'Desarrollo Local'},
-    ],
+    'SCHEMA_PATH_PREFIX': '/api/',
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'displayOperationId': False,
+        'filter': True,
+    },
     'TAGS': [
-        {'name': 'Autenticación', 'description': 'Endpoints de autenticación y tokens JWT'},
-        {'name': 'Usuarios', 'description': 'Gestión completa de usuarios del sistema'},
-        {'name': 'Tipos de Usuario', 'description': 'Catálogo de roles y tipos de usuario'},
+        {'name': 'Autenticación', 'description': 'Login y gestión de tokens JWT'},
+        {'name': 'Usuarios', 'description': 'Gestión de usuarios del sistema'},
         {'name': 'Casos', 'description': 'Gestión de casos sociales'},
-        {'name': 'Estados de Caso', 'description': 'Catálogo de estados para casos'},
-        {'name': 'Categorías', 'description': 'Categorías de clasificación de casos'},
-        {'name': 'Caso-Categorías', 'description': 'Relación entre casos y categorías'},
-        {'name': 'Donaciones', 'description': 'Gestión de donaciones y contribuciones'},
-        {'name': 'Evidencias', 'description': 'Archivos multimedia de evidencia de casos'},
-        {'name': 'Conversaciones', 'description': 'Hilos de conversación entre usuarios'},
-        {'name': 'Mensajes', 'description': 'Mensajes dentro de conversaciones'},
-        {'name': 'Tipos de Mensaje', 'description': 'Catálogo de tipos de mensaje'},
-        {'name': 'Reportes', 'description': 'Reportes de usuarios o contenido inapropiado'},
-        {'name': 'Estados de Reporte', 'description': 'Catálogo de estados de reportes'},
-        {'name': 'Sanciones', 'description': 'Sanciones aplicadas a usuarios'},
-        {'name': 'Tipos de Sanción', 'description': 'Catálogo de tipos de sanción'},
-        {'name': 'Documentos OCR', 'description': 'Documentos procesados con OCR'},
-        {'name': 'Estados OCR', 'description': 'Catálogo de estados de procesamiento OCR'},
-        {'name': 'Log OCR', 'description': 'Historial de procesamiento OCR'},
+        {'name': 'Categorías', 'description': 'Clasificación de casos'},
+        {'name': 'Donaciones', 'description': 'Gestión de donaciones'},
+        {'name': 'Evidencias', 'description': 'Archivos multimedia de casos'},
+        {'name': 'Mensajería', 'description': 'Conversaciones y mensajes'},
+        {'name': 'Moderación', 'description': 'Reportes y sanciones'},
+        {'name': 'OCR', 'description': 'Procesamiento de documentos con OCR'},
+        {'name': 'Catálogos', 'description': 'Datos de referencia del sistema'},
     ],
+    'POSTPROCESSING_HOOKS': [],
+    'PREPROCESSING_HOOKS': [],
 }
 
 CORS_ALLOWED_ORIGINS = [

@@ -1,0 +1,336 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Categorías - Admin{% endblock %}
+{% block page_title %}Gestión de Categorías{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Categorías de Casos</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrear()">
+            <i class="bi bi-plus-circle"></i> Nueva Categoría
+        </button>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <div id="loading" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+
+                    <div id="tablaCategorias" class="table-responsive d-none">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Icono</th>
+                                    <th>Nombre</th>
+                                    <th>Descripción</th>
+                                    <th>Casos</th>
+                                    <th>Estado</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listaCategorias">
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="sinResultados" class="text-center py-5 d-none">
+                        <i class="bi bi-tags display-1 text-muted"></i>
+                        <p class="text-muted mt-3">No hay categorías</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Estadísticas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Total Categorías</span>
+                            <strong id="totalCategorias">0</strong>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Activas</span>
+                            <strong id="categoriasActivas">0</strong>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Total Casos</span>
+                            <strong id="totalCasos">0</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Iconos Disponibles</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2" id="iconosDisponibles">
+                        <span class="badge bg-light text-dark"><i class="bi bi-heart-fill"></i> heart-fill</span>
+                        <span class="badge bg-light text-dark"><i class="bi bi-hospital"></i> hospital</span>
+                        <span class="badge bg-light text-dark"><i class="bi bi-book"></i> book</span>
+                        <span class="badge bg-light text-dark"><i class="bi bi-house"></i> house</span>
+                        <span class="badge bg-light text-dark"><i class="bi bi-tree"></i> tree</span>
+                        <span class="badge bg-light text-dark"><i class="bi bi-gift"></i> gift</span>
+                        <span class="badge bg-light text-dark"><i class="bi bi-people"></i> people</span>
+                        <span class="badge bg-light text-dark"><i class="bi bi-shield"></i> shield</span>
+                    </div>
+                    <small class="text-muted mt-2 d-block">Usa Bootstrap Icons</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear/Editar -->
+<div class="modal fade" id="modalCategoria" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalTitulo">Nueva Categoría</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formCategoria">
+                <input type="hidden" id="categoria_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" id="nombre" class="form-control" required maxlength="100">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea id="descripcion" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Icono (Bootstrap Icons)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i id="iconoPreview" class="bi bi-tag"></i>
+                            </span>
+                            <input type="text" id="icono" class="form-control" 
+                                   placeholder="Ej: heart-fill, hospital, book" 
+                                   oninput="actualizarIconoPreview()">
+                        </div>
+                        <small class="text-muted">Visita: https://icons.getbootstrap.com/</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Color</label>
+                        <input type="color" id="color" class="form-control form-control-color" value="#0d6efd">
+                    </div>
+
+                    <div class="form-check">
+                        <input type="checkbox" id="esta_activa" class="form-check-input" checked>
+                        <label class="form-check-label" for="esta_activa">
+                            Categoría Activa
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnGuardar">Crear</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let categorias = [];
+
+async function cargarCategorias() {
+    const loading = document.getElementById('loading');
+    const tabla = document.getElementById('tablaCategorias');
+    const sinResultados = document.getElementById('sinResultados');
+
+    loading.classList.remove('d-none');
+    tabla.classList.add('d-none');
+    sinResultados.classList.add('d-none');
+
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/categorias/`);
+        const data = await response.json();
+        categorias = data.results || data;
+
+        loading.classList.add('d-none');
+
+        if (categorias.length === 0) {
+            sinResultados.classList.remove('d-none');
+        } else {
+            mostrarCategorias(categorias);
+            tabla.classList.remove('d-none');
+            actualizarEstadisticas();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        loading.classList.add('d-none');
+        alert('Error al cargar las categorías');
+    }
+}
+
+function mostrarCategorias(categorias) {
+    const tbody = document.getElementById('listaCategorias');
+    tbody.innerHTML = categorias.map(cat => `
+        <tr>
+            <td>
+                <div class="rounded p-2 d-inline-block" style="background-color: ${cat.color || '#0d6efd'}20;">
+                    <i class="bi bi-${cat.icono || 'tag'}" style="color: ${cat.color || '#0d6efd'}; font-size: 24px;"></i>
+                </div>
+            </td>
+            <td>
+                <strong>${cat.nombre}</strong>
+            </td>
+            <td>
+                <small class="text-muted">${cat.descripcion || '-'}</small>
+            </td>
+            <td>
+                <span class="badge bg-secondary">${cat.cantidad_casos || 0} casos</span>
+            </td>
+            <td>
+                <span class="badge ${cat.esta_activa ? 'bg-success' : 'bg-danger'}">
+                    ${cat.esta_activa ? 'Activa' : 'Inactiva'}
+                </span>
+            </td>
+            <td class="text-center">
+                <div class="btn-group btn-group-sm">
+                    <button onclick="abrirModalEditar(${cat.id})" class="btn btn-outline-warning" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button onclick="eliminarCategoria(${cat.id}, '${cat.nombre.replace(/'/g, "\\'")}')" 
+                            class="btn btn-outline-danger" title="Eliminar">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function actualizarEstadisticas() {
+    document.getElementById('totalCategorias').textContent = categorias.length;
+    document.getElementById('categoriasActivas').textContent = 
+        categorias.filter(c => c.esta_activa).length;
+    
+    const totalCasos = categorias.reduce((sum, c) => sum + (c.cantidad_casos || 0), 0);
+    document.getElementById('totalCasos').textContent = totalCasos;
+}
+
+function abrirModalCrear() {
+    document.getElementById('modalTitulo').textContent = 'Nueva Categoría';
+    document.getElementById('btnGuardar').textContent = 'Crear';
+    document.getElementById('formCategoria').reset();
+    document.getElementById('categoria_id').value = '';
+    document.getElementById('esta_activa').checked = true;
+    document.getElementById('color').value = '#0d6efd';
+    actualizarIconoPreview();
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalCategoria'));
+    modal.show();
+}
+
+async function abrirModalEditar(categoriaId) {
+    document.getElementById('modalTitulo').textContent = 'Editar Categoría';
+    document.getElementById('btnGuardar').textContent = 'Guardar Cambios';
+    document.getElementById('categoria_id').value = categoriaId;
+    
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/categorias/${categoriaId}/`);
+        const categoria = await response.json();
+        
+        document.getElementById('nombre').value = categoria.nombre;
+        document.getElementById('descripcion').value = categoria.descripcion || '';
+        document.getElementById('icono').value = categoria.icono || '';
+        document.getElementById('color').value = categoria.color || '#0d6efd';
+        document.getElementById('esta_activa').checked = categoria.esta_activa;
+        
+        actualizarIconoPreview();
+        
+        const modal = new bootstrap.Modal(document.getElementById('modalCategoria'));
+        modal.show();
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al cargar la categoría');
+    }
+}
+
+function actualizarIconoPreview() {
+    const icono = document.getElementById('icono').value || 'tag';
+    document.getElementById('iconoPreview').className = `bi bi-${icono}`;
+}
+
+document.getElementById('formCategoria').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const categoriaId = document.getElementById('categoria_id').value;
+    const url = categoriaId 
+        ? `${API_BASE_URL}/categorias/${categoriaId}/` 
+        : `${API_BASE_URL}/categorias/`;
+    const method = categoriaId ? 'PUT' : 'POST';
+    
+    const data = {
+        nombre: document.getElementById('nombre').value,
+        descripcion: document.getElementById('descripcion').value,
+        icono: document.getElementById('icono').value,
+        color: document.getElementById('color').value,
+        esta_activa: document.getElementById('esta_activa').checked
+    };
+    
+    try {
+        const response = await fetchWithAuth(url, {
+            method: method,
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            alert(categoriaId ? 'Categoría actualizada' : 'Categoría creada');
+            bootstrap.Modal.getInstance(document.getElementById('modalCategoria')).hide();
+            cargarCategorias();
+        } else {
+            const error = await response.json();
+            alert('Error: ' + JSON.stringify(error));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al guardar la categoría');
+    }
+});
+
+async function eliminarCategoria(categoriaId, nombre) {
+    if (!confirm(`¿Eliminar la categoría "${nombre}"?`)) return;
+    
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/categorias/${categoriaId}/`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            alert('Categoría eliminada');
+            cargarCategorias();
+        } else {
+            alert('Error al eliminar. Puede haber casos asociados.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al eliminar');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', cargarCategorias);
+</script>
+{% endblock %}

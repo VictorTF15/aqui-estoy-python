@@ -1,0 +1,313 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Crear Caso - Admin{% endblock %}
+{% block page_title %}Crear Nuevo Caso{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <form id="formCaso" enctype="multipart/form-data">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Información del Caso</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Título <span class="text-danger">*</span></label>
+                            <input type="text" id="titulo" class="form-control" required maxlength="150">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Descripción <span class="text-danger">*</span></label>
+                            <textarea id="descripcion" class="form-control" rows="5" required></textarea>
+                            <small class="text-muted">Describe detalladamente la situación y necesidades</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Categoría <span class="text-danger">*</span></label>
+                                <select id="id_categoria" class="form-select" required>
+                                    <option value="">Seleccionar...</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Beneficiario <span class="text-danger">*</span></label>
+                                <select id="id_usuario_beneficiario" class="form-select" required>
+                                    <option value="">Seleccionar...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Monto Necesario <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" id="monto_necesario" class="form-control" required min="1" step="0.01">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Fecha Límite</label>
+                                <input type="date" id="fecha_limite" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Imagen Principal <span class="text-danger">*</span></label>
+                            <input type="file" id="imagen_principal" class="form-control" accept="image/*" required>
+                            <div id="previewImagen" class="mt-2"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Imágenes Adicionales</label>
+                            <input type="file" id="imagenes_adicionales" class="form-control" accept="image/*" multiple>
+                            <small class="text-muted">Puedes seleccionar múltiples imágenes</small>
+                            <div id="previewImagenes" class="mt-2 d-flex gap-2 flex-wrap"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Información de Contacto</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Teléfono de Contacto</label>
+                            <input type="tel" id="telefono_contacto" class="form-control">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email de Contacto</label>
+                            <input type="email" id="email_contacto" class="form-control">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Dirección</label>
+                            <input type="text" id="direccion" class="form-control">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Ciudad</label>
+                                <input type="text" id="ciudad" class="form-control">
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Estado</label>
+                                <input type="text" id="estado" class="form-control">
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Código Postal</label>
+                                <input type="text" id="codigo_postal" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Estado y Visibilidad</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Estado del Caso</label>
+                            <select id="id_estado" class="form-select">
+                                <option value="1">Activo</option>
+                                <option value="2">Completado</option>
+                                <option value="3">Cancelado</option>
+                            </select>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" id="es_urgente" class="form-check-input">
+                            <label class="form-check-label" for="es_urgente">
+                                Marcar como urgente
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <input type="checkbox" id="es_verificado" class="form-check-input" checked>
+                            <label class="form-check-label" for="es_verificado">
+                                Caso verificado
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Información Adicional</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Notas Internas</label>
+                            <textarea id="notas_admin" class="form-control" rows="3" 
+                                      placeholder="Notas visibles solo para administradores"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-circle"></i> Crear Caso
+                    </button>
+                    <a href="/adm/casos/" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+async function cargarCategorias() {
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/categorias/`);
+        const data = await response.json();
+        const categorias = data.results || data;
+        
+        const select = document.getElementById('id_categoria');
+        categorias.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.nombre;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error al cargar categorías:', error);
+    }
+}
+
+async function cargarBeneficiarios() {
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/usuarios/?tipo_usuario=2`);
+        const data = await response.json();
+        const usuarios = data.results || data;
+        
+        const select = document.getElementById('id_usuario_beneficiario');
+        usuarios.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.id;
+            option.textContent = `${user.nombres} ${user.apellido_paterno} (${user.correo})`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error al cargar beneficiarios:', error);
+    }
+}
+
+// Preview de imagen principal
+document.getElementById('imagen_principal').addEventListener('change', function(e) {
+    const preview = document.getElementById('previewImagen');
+    const file = e.target.files[0];
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = `<img src="${e.target.result}" class="img-thumbnail" style="max-height: 200px;">`;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Preview de imágenes adicionales
+document.getElementById('imagenes_adicionales').addEventListener('change', function(e) {
+    const preview = document.getElementById('previewImagenes');
+    preview.innerHTML = '';
+    
+    Array.from(e.target.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const div = document.createElement('div');
+            div.innerHTML = `<img src="${e.target.result}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">`;
+            preview.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    });
+});
+
+document.getElementById('formCaso').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    
+    // Datos básicos
+    formData.append('titulo', document.getElementById('titulo').value);
+    formData.append('descripcion', document.getElementById('descripcion').value);
+    formData.append('id_categoria', document.getElementById('id_categoria').value);
+    formData.append('id_usuario_beneficiario', document.getElementById('id_usuario_beneficiario').value);
+    formData.append('monto_necesario', document.getElementById('monto_necesario').value);
+    formData.append('id_estado', document.getElementById('id_estado').value);
+    
+    // Campos opcionales
+    const fechaLimite = document.getElementById('fecha_limite').value;
+    if (fechaLimite) formData.append('fecha_limite', fechaLimite);
+    
+    const telefono = document.getElementById('telefono_contacto').value;
+    if (telefono) formData.append('telefono_contacto', telefono);
+    
+    const email = document.getElementById('email_contacto').value;
+    if (email) formData.append('email_contacto', email);
+    
+    const direccion = document.getElementById('direccion').value;
+    if (direccion) formData.append('direccion', direccion);
+    
+    const ciudad = document.getElementById('ciudad').value;
+    if (ciudad) formData.append('ciudad', ciudad);
+    
+    const estado = document.getElementById('estado').value;
+    if (estado) formData.append('estado', estado);
+    
+    const cp = document.getElementById('codigo_postal').value;
+    if (cp) formData.append('codigo_postal', cp);
+    
+    formData.append('es_urgente', document.getElementById('es_urgente').checked);
+    formData.append('es_verificado', document.getElementById('es_verificado').checked);
+    
+    const notas = document.getElementById('notas_admin').value;
+    if (notas) formData.append('notas_admin', notas);
+    
+    // Imagen principal
+    const imagenPrincipal = document.getElementById('imagen_principal').files[0];
+    if (imagenPrincipal) {
+        formData.append('imagen_principal', imagenPrincipal);
+    }
+    
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_BASE_URL}/casos/`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            alert('Caso creado correctamente');
+            window.location.href = `/adm/casos/${data.id}/`;
+        } else {
+            const error = await response.json();
+            alert('Error al crear el caso: ' + JSON.stringify(error));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al crear el caso');
+    }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    cargarCategorias();
+    cargarBeneficiarios();
+});
+</script>
+{% endblock %}

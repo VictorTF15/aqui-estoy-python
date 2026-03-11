@@ -1,0 +1,334 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Usuarios - Admin{% endblock %}
+{% block page_title %}Gestión de Usuarios{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header con estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Total Usuarios</h6>
+                        <h3 class="mb-0" id="totalUsuarios">{{ usuarios|length }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Activos</h6>
+                        <h3 class="mb-0">{{ usuarios|length }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón Crear -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Lista de Usuarios</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrear()">
+            <i class="bi bi-plus-circle"></i> Nuevo Usuario
+        </button>
+    </div>
+
+    <!-- Tabla de Usuarios -->
+    <div class="card">
+        <div class="card-body">
+            {% if usuarios %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Correo</th>
+                            <th>Tipo</th>
+                            <th>Ubicación</th>
+                            <th>Estado</th>
+                            <th>Registro</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar me-3">
+                                        {% if usuario.imagen_perfil %}
+                                            <img src="{{ usuario.imagen_perfil }}" alt="">
+                                        {% else %}
+                                            <div class="avatar-placeholder">
+                                                {{ usuario.nombres|slice:":1" }}{{ usuario.apellido_paterno|slice:":1" }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div class="fw-medium">{{ usuario.nombres }} {{ usuario.apellido_paterno }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ usuario.correo }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ usuario.id_tipo_usuario.nombre }}</span>
+                            </td>
+                            <td>{{ usuario.ciudad|default:"—" }}, {{ usuario.estado|default:"—" }}</td>
+                            <td>
+                                <span class="badge {% if usuario.esta_activo %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if usuario.esta_activo %}Activo{% else %}Inactivo{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ usuario.fecha_registro|date:"d/m/Y" }}</td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="/adm/usuarios/{{ usuario.id }}/" class="btn btn-outline-primary" title="Ver">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <button onclick="abrirModalEditar('{{ usuario.id }}')" class="btn btn-outline-warning" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button onclick="confirmarEliminacion('{{ usuario.id }}', '{{ usuario.nombres|escapejs }} {{ usuario.apellido_paterno|escapejs }}')" 
+                                            class="btn btn-outline-danger" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-people display-1 text-muted"></i>
+                <p class="text-muted mt-3">No hay usuarios registrados</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear/Editar Usuario -->
+<div id="modalUsuario" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalTitulo">Nuevo Usuario</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formUsuario" method="post">
+                {% csrf_token %}
+                <input type="hidden" id="usuario_id" name="usuario_id">
+                
+                <div class="modal-body">
+                    <h6 class="border-bottom pb-2 mb-3">Información Personal</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombres <span class="text-danger">*</span></label>
+                            <input type="text" id="nombres" name="nombres" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Apellido Paterno <span class="text-danger">*</span></label>
+                            <input type="text" id="apellido_paterno" name="apellido_paterno" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Apellido Materno</label>
+                            <input type="text" id="apellido_materno" name="apellido_materno" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Correo <span class="text-danger">*</span></label>
+                            <input type="email" id="correo" name="correo" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Contraseña <span class="text-danger" id="asteriscoContrasena">*</span></label>
+                            <input type="password" id="contrasena" name="contrasena" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Teléfono</label>
+                            <input type="tel" id="telefono" name="telefono" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tipo de Usuario <span class="text-danger">*</span></label>
+                            <select id="id_tipo_usuario" name="id_tipo_usuario" class="form-select" required>
+                                <option value="">Seleccionar...</option>
+                                {% for tipo in tipos_usuario %}
+                                    <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <h6 class="border-bottom pb-2 mb-3 mt-4">Dirección</h6>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Dirección</label>
+                            <input type="text" id="direccion" name="direccion" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Colonia</label>
+                            <input type="text" id="colonia" name="colonia" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Código Postal</label>
+                            <input type="text" id="codigo_postal" name="codigo_postal" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Ciudad</label>
+                            <input type="text" id="ciudad" name="ciudad" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Estado</label>
+                            <input type="text" id="estado" name="estado" class="form-control">
+                        </div>
+                    </div>
+
+                    <h6 class="border-bottom pb-2 mb-3 mt-4">Estado</h6>
+                    <div class="form-check">
+                        <input type="checkbox" id="esta_activo" name="esta_activo" class="form-check-input" checked>
+                        <label class="form-check-label" for="esta_activo">Usuario Activo</label>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnGuardar">Crear Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+</style>
+
+<script>
+function abrirModalCrear() {
+    document.getElementById('modalTitulo').textContent = 'Nuevo Usuario';
+    document.getElementById('btnGuardar').textContent = 'Crear Usuario';
+    document.getElementById('formUsuario').reset();
+    document.getElementById('usuario_id').value = '';
+    document.getElementById('contrasena').required = true;
+    document.getElementById('asteriscoContrasena').style.display = 'inline';
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalUsuario'));
+    modal.show();
+}
+
+function abrirModalEditar(usuarioId) {
+    document.getElementById('modalTitulo').textContent = 'Editar Usuario';
+    document.getElementById('btnGuardar').textContent = 'Guardar Cambios';
+    document.getElementById('usuario_id').value = usuarioId;
+    document.getElementById('contrasena').required = false;
+    document.getElementById('asteriscoContrasena').style.display = 'none';
+    
+    // Cargar datos
+    fetchWithAuth(`${API_BASE_URL}/usuarios/${usuarioId}/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('nombres').value = data.nombres || '';
+            document.getElementById('apellido_paterno').value = data.apellido_paterno || '';
+            document.getElementById('apellido_materno').value = data.apellido_materno || '';
+            document.getElementById('correo').value = data.correo || '';
+            document.getElementById('telefono').value = data.telefono || '';
+            document.getElementById('id_tipo_usuario').value = data.id_tipo_usuario || '';
+            document.getElementById('direccion').value = data.direccion || '';
+            document.getElementById('colonia').value = data.colonia || '';
+            document.getElementById('codigo_postal').value = data.codigo_postal || '';
+            document.getElementById('ciudad').value = data.ciudad || '';
+            document.getElementById('estado').value = data.estado || '';
+            document.getElementById('esta_activo').checked = data.esta_activo;
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalUsuario'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar datos del usuario');
+        });
+}
+
+function confirmarEliminacion(userId, userName) {
+    if(confirm(`¿Estás seguro de eliminar al usuario ${userName}?`)) {
+        fetchWithAuth(`${API_BASE_URL}/usuarios/${userId}/`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            if(response.ok) {
+                alert('Usuario eliminado correctamente');
+                location.reload();
+            } else {
+                alert('Error al eliminar usuario');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar usuario');
+        });
+    }
+}
+
+document.getElementById('formUsuario').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const usuarioId = document.getElementById('usuario_id').value;
+    const url = usuarioId 
+        ? `${API_BASE_URL}/usuarios/${usuarioId}/` 
+        : `${API_BASE_URL}/usuarios/`;
+    const method = usuarioId ? 'PUT' : 'POST';
+    
+    try {
+        const response = await fetchWithAuth(url, {
+            method: method,
+            body: JSON.stringify(Object.fromEntries(formData))
+        });
+        
+        if(response.ok) {
+            alert(usuarioId ? 'Usuario actualizado' : 'Usuario creado');
+            location.reload();
+        } else {
+            const error = await response.json();
+            alert('Error: ' + JSON.stringify(error));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al guardar usuario');
+    }
+});
+</script>
+{% endblock %}

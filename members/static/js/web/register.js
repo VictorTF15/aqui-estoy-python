@@ -99,7 +99,7 @@ function setupForm() {
                 showAlert('Cuenta creada exitosamente. Redirigiendo...', 'success');
                 
                 setTimeout(() => {
-                    window.location.href = '/web/login/';
+                    window.location.href = '/login/';
                 }, 2000);
             } else {
                 showAlert(result.error || 'Error al crear la cuenta', 'danger');

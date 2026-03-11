@@ -1,42 +1,69 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
-from rest_framework import permissions
-from . import api_views
-
-# Router para ViewSets
-router = DefaultRouter()
-router.register(r'usuarios', api_views.UsuarioViewSet, basename='usuario')
-router.register(r'casos', api_views.CasoViewSet, basename='caso')
-router.register(r'donaciones', api_views.DonacionViewSet, basename='donacion')
-router.register(r'categorias', api_views.CategoriaViewSet, basename='categoria')
-router.register(r'estados', api_views.EstadoCasoViewSet, basename='estado')
-
-# Configuración de Swagger
-schema_view = get_schema_view(
-    openapi.Info(
-        title="Aquí Estoy API",
-        default_version='v1',
-        description="API REST para la plataforma de donaciones Aquí Estoy",
-        contact=openapi.Contact(email="contact@aquiestoy.com"),
-        license=openapi.License(name="MIT License"),
-    ),
-    public=True,
-    permission_classes=[permissions.AllowAny],
+from rest_framework_simplejwt.views import TokenRefreshView
+from .api_views import (
+    CustomTokenObtainPairView,
+    UsuarioViewSet,
+    TipoUsuarioViewSet,
+    CasoViewSet,
+    EstadoCasoViewSet,
+    CategoriaViewSet,
+    CasoCategoriaViewSet,
+    DonacionViewSet,
+    EvidenciaViewSet,
+    ConversacionViewSet,
+    MensajeViewSet,
+    TipoMensajeViewSet,
+    ReporteViewSet,
+    EstadoReporteViewSet,
+    SancionViewSet,
+    TipoSancionViewSet,
+    DocumentoOCRViewSet,
+    EstadoOCRViewSet,
+    LogOCRViewSet,
 )
 
+app_name = 'api'
+
+router = DefaultRouter()
+
+# Usuarios
+router.register(r'usuarios', UsuarioViewSet, basename='usuarios')
+router.register(r'tipos-usuario', TipoUsuarioViewSet, basename='tipos-usuario')
+
+# Casos
+router.register(r'casos', CasoViewSet, basename='casos')
+router.register(r'estados-caso', EstadoCasoViewSet, basename='estados-caso')
+router.register(r'categorias', CategoriaViewSet, basename='categorias')
+router.register(r'caso-categorias', CasoCategoriaViewSet, basename='caso-categorias')
+
+# Donaciones
+router.register(r'donaciones', DonacionViewSet, basename='donaciones')
+
+# Evidencias
+router.register(r'evidencias', EvidenciaViewSet, basename='evidencias')
+
+# Conversaciones y Mensajes
+router.register(r'conversaciones', ConversacionViewSet, basename='conversaciones')
+router.register(r'mensajes', MensajeViewSet, basename='mensajes')
+router.register(r'tipos-mensaje', TipoMensajeViewSet, basename='tipos-mensaje')
+
+# Reportes y Sanciones
+router.register(r'reportes', ReporteViewSet, basename='reportes')
+router.register(r'estados-reporte', EstadoReporteViewSet, basename='estados-reporte')
+router.register(r'sanciones', SancionViewSet, basename='sanciones')
+router.register(r'tipos-sancion', TipoSancionViewSet, basename='tipos-sancion')
+
+# OCR
+router.register(r'documentos-ocr', DocumentoOCRViewSet, basename='documentos-ocr')
+router.register(r'estados-ocr', EstadoOCRViewSet, basename='estados-ocr')
+router.register(r'logs-ocr', LogOCRViewSet, basename='logs-ocr')
+
 urlpatterns = [
-    # Documentación Swagger con drf-yasg
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='redoc'),
-    path('swagger.json', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    # Autenticación
+    path('auth/login/', CustomTokenObtainPairView.as_view(), name='login'),
+    path('auth/refresh/', TokenRefreshView.as_view(), name='refresh'),
     
-    # Autenticación JWT (opcional)
-    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    
-    # Rutas del router
+    # Router
     path('', include(router.urls)),
 ]

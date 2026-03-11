@@ -1,0 +1,186 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Dashboard - Admin{% endblock %}
+{% block page_title %}Dashboard Principal{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div class="ms-3 flex-grow-1">
+                        <h6 class="text-muted mb-1">Usuarios</h6>
+                        <h3 class="mb-0" id="totalUsuarios">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-folder-fill"></i>
+                    </div>
+                    <div class="ms-3 flex-grow-1">
+                        <h6 class="text-muted mb-1">Casos Activos</h6>
+                        <h3 class="mb-0" id="totalCasos">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-gift-fill"></i>
+                    </div>
+                    <div class="ms-3 flex-grow-1">
+                        <h6 class="text-muted mb-1">Donaciones</h6>
+                        <h3 class="mb-0" id="totalDonaciones">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-danger bg-opacity-10 text-danger">
+                        <i class="bi bi-flag-fill"></i>
+                    </div>
+                    <div class="ms-3 flex-grow-1">
+                        <h6 class="text-muted mb-1">Reportes Pendientes</h6>
+                        <h3 class="mb-0" id="totalReportes">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Casos Recientes y Donaciones -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Casos Recientes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Título</th>
+                                    <th>Usuario</th>
+                                    <th>Estado</th>
+                                    <th>Monto</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="casosRecientes">
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Actividad Reciente</h5>
+                </div>
+                <div class="card-body">
+                    <div id="actividadReciente">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function cargarEstadisticas() {
+        try {
+            const [usuarios, casos, donaciones, reportes] = await Promise.all([
+                fetchWithAuth(`${API_BASE_URL}/usuarios/`),
+                fetchWithAuth(`${API_BASE_URL}/casos/`),
+                fetchWithAuth(`${API_BASE_URL}/donaciones/`),
+                fetchWithAuth(`${API_BASE_URL}/reportes/?estado=1`)
+            ]);
+
+            const usuariosData = await usuarios.json();
+            const casosData = await casos.json();
+            const donacionesData = await donaciones.json();
+            const reportesData = await reportes.json();
+
+            document.getElementById('totalUsuarios').textContent = usuariosData.count || usuariosData.length || 0;
+            document.getElementById('totalCasos').textContent = casosData.count || casosData.length || 0;
+            document.getElementById('totalDonaciones').textContent = donacionesData.count || donacionesData.length || 0;
+            document.getElementById('totalReportes').textContent = reportesData.count || reportesData.length || 0;
+
+        } catch (error) {
+            console.error('Error al cargar estadísticas:', error);
+        }
+    }
+
+    async function cargarCasosRecientes() {
+        try {
+            const response = await fetchWithAuth(`${API_BASE_URL}/casos/?ordering=-fecha_creacion&page_size=5`);
+            const data = await response.json();
+            const casos = data.results || data;
+
+            const tbody = document.getElementById('casosRecientes');
+            
+            if (casos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay casos recientes</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = casos.map(caso => `
+                <tr>
+                    <td>${caso.titulo}</td>
+                    <td>${caso.usuario_nombre || 'N/A'}</td>
+                    <td>
+                        <span class="badge bg-success">${caso.estado_nombre || 'Activo'}</span>
+                    </td>
+                    <td>$${Number(caso.monto_necesario).toLocaleString()}</td>
+                    <td>
+                        <a href="/adm/casos/${caso.id}/" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+            `).join('');
+
+        } catch (error) {
+            console.error('Error al cargar casos:', error);
+            document.getElementById('casosRecientes').innerHTML = 
+                '<tr><td colspan="5" class="text-center text-danger">Error al cargar casos</td></tr>';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarEstadisticas();
+        cargarCasosRecientes();
+    });
+</script>
+{% endblock %}

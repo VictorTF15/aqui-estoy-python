@@ -1,0 +1,478 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Sanciones - Admin{% endblock %}
+{% block page_title %}Gestión de Sanciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-danger bg-opacity-10 text-danger">
+                        <i class="bi bi-shield-exclamation"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Total Sanciones</h6>
+                        <h3 class="mb-0" id="totalSanciones">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Activas</h6>
+                        <h3 class="mb-0" id="sancionesActivas">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Temporales</h6>
+                        <h3 class="mb-0" id="sancionesTemporales">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-dark bg-opacity-10 text-dark">
+                        <i class="bi bi-ban"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Permanentes</h6>
+                        <h3 class="mb-0" id="sancionesPermanentes">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Tipo</label>
+                    <select id="filtroTipo" class="form-select">
+                        <option value="">Todas</option>
+                        <option value="advertencia">Advertencia</option>
+                        <option value="suspension_temporal">Suspensión Temporal</option>
+                        <option value="suspension_permanente">Suspensión Permanente</option>
+                        <option value="bloqueo_publicacion">Bloqueo Publicación</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Estado</label>
+                    <select id="filtroEstado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="true">Activas</option>
+                        <option value="false">Inactivas</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Buscar Usuario</label>
+                    <input type="text" id="busquedaUsuario" class="form-control" placeholder="Nombre o email...">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button onclick="aplicarFiltros()" class="btn btn-primary w-100">
+                        <i class="bi bi-filter"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón Crear -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5>Lista de Sanciones</h5>
+        <button class="btn btn-danger" onclick="abrirModalCrear()">
+            <i class="bi bi-plus-circle"></i> Nueva Sanción
+        </button>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card">
+        <div class="card-body">
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+
+            <div id="tablaSanciones" class="table-responsive d-none">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Usuario Sancionado</th>
+                            <th>Tipo</th>
+                            <th>Motivo</th>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Fin</th>
+                            <th>Estado</th>
+                            <th>Admin</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaSanciones">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="sinResultados" class="text-center py-5 d-none">
+                <i class="bi bi-shield-check display-1 text-muted"></i>
+                <p class="text-muted mt-3">No hay sanciones</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear Sanción -->
+<div class="modal fade" id="modalSancion" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Nueva Sanción</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formSancion">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Usuario a Sancionar <span class="text-danger">*</span></label>
+                            <select id="id_usuario" class="form-select" required>
+                                <option value="">Seleccionar usuario...</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tipo de Sanción <span class="text-danger">*</span></label>
+                            <select id="tipo_sancion" class="form-select" required onchange="manejarTipoSancion()">
+                                <option value="">Seleccionar...</option>
+                                <option value="advertencia">Advertencia</option>
+                                <option value="suspension_temporal">Suspensión Temporal</option>
+                                <option value="suspension_permanente">Suspensión Permanente</option>
+                                <option value="bloqueo_publicacion">Bloqueo de Publicación</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Motivo <span class="text-danger">*</span></label>
+                        <textarea id="motivo" class="form-control" rows="3" required 
+                                  placeholder="Describe el motivo de la sanción"></textarea>
+                    </div>
+
+                    <div class="row" id="fechasContainer" style="display: none;">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha Inicio</label>
+                            <input type="datetime-local" id="fecha_inicio" class="form-control">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha Fin <span class="text-danger">*</span></label>
+                            <input type="datetime-local" id="fecha_fin" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Reporte Relacionado (opcional)</label>
+                        <select id="id_reporte" class="form-select">
+                            <option value="">Sin reporte relacionado</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Notas Adicionales</label>
+                        <textarea id="notas" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="form-check">
+                        <input type="checkbox" id="notificar_usuario" class="form-check-input" checked>
+                        <label class="form-check-label" for="notificar_usuario">
+                            Notificar al usuario por correo electrónico
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Aplicar Sanción</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let sanciones = [];
+
+async function cargarSanciones(filtros = {}) {
+    const loading = document.getElementById('loading');
+    const tabla = document.getElementById('tablaSanciones');
+    const sinResultados = document.getElementById('sinResultados');
+
+    loading.classList.remove('d-none');
+    tabla.classList.add('d-none');
+    sinResultados.classList.add('d-none');
+
+    try {
+        const params = new URLSearchParams(filtros);
+        const response = await fetchWithAuth(`${API_BASE_URL}/sanciones/?${params}`);
+        const data = await response.json();
+        sanciones = data.results || data;
+
+        loading.classList.add('d-none');
+
+        if (sanciones.length === 0) {
+            sinResultados.classList.remove('d-none');
+        } else {
+            mostrarSanciones(sanciones);
+            tabla.classList.remove('d-none');
+            calcularEstadisticas(sanciones);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        loading.classList.add('d-none');
+        alert('Error al cargar las sanciones');
+    }
+}
+
+function mostrarSanciones(sanciones) {
+    const tbody = document.getElementById('listaSanciones');
+    tbody.innerHTML = sanciones.map(sancion => {
+        const tipoClass = {
+            'advertencia': 'warning',
+            'suspension_temporal': 'danger',
+            'suspension_permanente': 'dark',
+            'bloqueo_publicacion': 'info'
+        };
+
+        const ahora = new Date();
+        const esActiva = sancion.esta_activa && (!sancion.fecha_fin || new Date(sancion.fecha_fin) > ahora);
+
+        return `
+            <tr>
+                <td>
+                    <div>
+                        <strong>${sancion.usuario_nombre || 'N/A'}</strong>
+                        <br><small class="text-muted">${sancion.usuario_email || ''}</small>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-${tipoClass[sancion.tipo_sancion] || 'secondary'}">
+                        ${sancion.tipo_sancion}
+                    </span>
+                </td>
+                <td>
+                    <small>${sancion.motivo?.substring(0, 50)}${sancion.motivo?.length > 50 ? '...' : ''}</small>
+                </td>
+                <td>${new Date(sancion.fecha_inicio).toLocaleDateString()}</td>
+                <td>
+                    ${sancion.fecha_fin ? new Date(sancion.fecha_fin).toLocaleDateString() : 
+                      '<span class="badge bg-dark">Permanente</span>'}
+                </td>
+                <td>
+                    <span class="badge ${esActiva ? 'bg-danger' : 'bg-success'}">
+                        ${esActiva ? 'Activa' : 'Inactiva'}
+                    </span>
+                </td>
+                <td>
+                    <small>${sancion.admin_nombre || 'Sistema'}</small>
+                </td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                        <a href="/adm/sanciones/${sancion.id}/" class="btn btn-outline-primary" title="Ver">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        ${esActiva ? `
+                            <button onclick="levantarSancion(${sancion.id})" class="btn btn-outline-success" title="Levantar">
+                                <i class="bi bi-check-circle"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function calcularEstadisticas(sanciones) {
+    const ahora = new Date();
+    document.getElementById('totalSanciones').textContent = sanciones.length;
+    
+    const activas = sanciones.filter(s => 
+        s.esta_activa && (!s.fecha_fin || new Date(s.fecha_fin) > ahora)
+    ).length;
+    document.getElementById('sancionesActivas').textContent = activas;
+    
+    const temporales = sanciones.filter(s => 
+        s.tipo_sancion === 'suspension_temporal' || s.tipo_sancion === 'bloqueo_publicacion'
+    ).length;
+    document.getElementById('sancionesTemporales').textContent = temporales;
+    
+    const permanentes = sanciones.filter(s => 
+        s.tipo_sancion === 'suspension_permanente'
+    ).length;
+    document.getElementById('sancionesPermanentes').textContent = permanentes;
+}
+
+function aplicarFiltros() {
+    const filtros = {};
+    
+    const tipo = document.getElementById('filtroTipo').value;
+    if (tipo) filtros.tipo_sancion = tipo;
+    
+    const estado = document.getElementById('filtroEstado').value;
+    if (estado) filtros.esta_activa = estado;
+    
+    const busqueda = document.getElementById('busquedaUsuario').value;
+    if (busqueda) filtros.search = busqueda;
+    
+    cargarSanciones(filtros);
+}
+
+async function cargarUsuarios() {
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/usuarios/`);
+        const data = await response.json();
+        const usuarios = data.results || data;
+        
+        const select = document.getElementById('id_usuario');
+        usuarios.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.id;
+            option.textContent = `${user.nombres} ${user.apellido_paterno} (${user.correo})`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error al cargar usuarios:', error);
+    }
+}
+
+async function cargarReportes() {
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/reportes/?estado=1`);
+        const data = await response.json();
+        const reportes = data.results || data;
+        
+        const select = document.getElementById('id_reporte');
+        reportes.forEach(rep => {
+            const option = document.createElement('option');
+            option.value = rep.id;
+            option.textContent = `Reporte #${rep.id} - ${rep.motivo}`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error al cargar reportes:', error);
+    }
+}
+
+function manejarTipoSancion() {
+    const tipo = document.getElementById('tipo_sancion').value;
+    const fechasContainer = document.getElementById('fechasContainer');
+    const fechaFin = document.getElementById('fecha_fin');
+    
+    if (tipo === 'suspension_temporal' || tipo === 'bloqueo_publicacion') {
+        fechasContainer.style.display = 'block';
+        fechaFin.required = true;
+        
+        // Establecer fecha inicio como ahora
+        const ahora = new Date();
+        document.getElementById('fecha_inicio').value = ahora.toISOString().slice(0, 16);
+    } else {
+        fechasContainer.style.display = 'none';
+        fechaFin.required = false;
+    }
+}
+
+function abrirModalCrear() {
+    document.getElementById('formSancion').reset();
+    document.getElementById('fechasContainer').style.display = 'none';
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalSancion'));
+    modal.show();
+}
+
+document.getElementById('formSancion').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const data = {
+        id_usuario: document.getElementById('id_usuario').value,
+        tipo_sancion: document.getElementById('tipo_sancion').value,
+        motivo: document.getElementById('motivo').value,
+        notas: document.getElementById('notas').value,
+        esta_activa: true
+    };
+    
+    const tipo = data.tipo_sancion;
+    if (tipo === 'suspension_temporal' || tipo === 'bloqueo_publicacion') {
+        data.fecha_inicio = document.getElementById('fecha_inicio').value;
+        data.fecha_fin = document.getElementById('fecha_fin').value;
+    } else {
+        data.fecha_inicio = new Date().toISOString();
+    }
+    
+    const idReporte = document.getElementById('id_reporte').value;
+    if (idReporte) data.id_reporte = idReporte;
+    
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/sanciones/`, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            alert('Sanción aplicada correctamente');
+            bootstrap.Modal.getInstance(document.getElementById('modalSancion')).hide();
+            cargarSanciones();
+        } else {
+            const error = await response.json();
+            alert('Error: ' + JSON.stringify(error));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al aplicar la sanción');
+    }
+});
+
+async function levantarSancion(sancionId) {
+    if (!confirm('¿Estás seguro de levantar esta sanción?')) return;
+    
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/sanciones/${sancionId}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ esta_activa: false })
+        });
+        
+        if (response.ok) {
+            alert('Sanción levantada correctamente');
+            cargarSanciones();
+        } else {
+            alert('Error al levantar la sanción');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al levantar la sanción');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    cargarSanciones();
+    cargarUsuarios();
+    cargarReportes();
+});
+</script>
+{% endblock %}

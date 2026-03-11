@@ -1,5 +1,8 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.hashers import make_password
+from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 from .models import (
     Usuarios, TipoUsuario, Casos, Donaciones, Categorias, EstadoCaso, 
     CasoCategorias, Evidencias, Conversaciones, Mensajes, TipoMensaje,
@@ -8,40 +11,150 @@ from .models import (
 )
 
 
-class TipoUsuarioSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TipoUsuario  
-        fields = ['id', 'nombre', 'descripcion', 'fecha_creacion']
+# ============================================
+# AUTENTICACIÓN
+# ============================================
 
-
-class UsuarioListSerializer(serializers.ModelSerializer):
-    tipo_usuario = serializers.CharField(source='id_tipo_usuario.nombre', read_only=True)
+class CustomTokenObtainPairSerializer(serializers.Serializer):
+    """Serializer personalizado para autenticación con correo electrónico"""
+    correo = serializers.EmailField(required=True)
+    password = serializers.CharField(required=False, write_only=True, style={'input_type': 'password'})
+    contrasena = serializers.CharField(required=False, write_only=True, style={'input_type': 'password'})
     
     class Meta:
-        model = Usuarios
-        fields = [
-            'id', 'nombres', 'apellido_paterno', 'apellido_materno',
-            'correo', 'telefono', 'tipo_usuario', 'ciudad', 'estado',
-            'esta_activo', 'verificado', 'fecha_registro'
-        ]
+        ref_name = 'Login'
+    
+    def validate(self, attrs):
+        correo = attrs.get('correo')
+        # Aceptar tanto 'password' como 'contrasena'
+        password = attrs.get('password') or attrs.get('contrasena')
+        
+        if not password:
+            raise serializers.ValidationError({'password': 'Este campo es requerido'})
+        
+        # Buscar usuario por correo
+        try:
+            usuario = Usuarios.objects.get(correo=correo)
+        except Usuarios.DoesNotExist:
+            raise serializers.ValidationError({'detail': 'Credenciales incorrectas'})
+        
+        # Verificar si está activo
+        if not usuario.esta_activo:
+            raise serializers.ValidationError({'detail': 'Esta cuenta está inactiva'})
+        
+        # Verificar contraseña
+        if not usuario.check_password(password):
+            raise serializers.ValidationError({'detail': 'Credenciales incorrectas'})
+        
+        # Generar tokens usando RefreshToken
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(usuario)
+        
+        # Agregar claims personalizados
+        refresh['correo'] = usuario.correo
+        refresh['nombres'] = usuario.nombres
+        refresh['tipo_usuario'] = usuario.id_tipo_usuario.nombre if usuario.id_tipo_usuario else None
+        refresh['user_id'] = usuario.id
+        
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': {
+                'id': usuario.id,
+                'correo': usuario.correo,
+                'nombres': usuario.nombres,
+                'apellido_paterno': usuario.apellido_paterno,
+                'tipo_usuario': usuario.id_tipo_usuario.nombre if usuario.id_tipo_usuario else None,
+                'imagen_perfil': usuario.imagen_perfil.url if usuario.imagen_perfil else None,
+            }
+        }
 
 
-class UsuarioDetailSerializer(serializers.ModelSerializer):
+# ============================================
+# TIPOS Y CATÁLOGOS (SOLO LECTURA)
+# ============================================
+
+class TipoUsuarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TipoUsuario
+        fields = ['id', 'nombre', 'descripcion', 'fecha_creacion']
+        read_only_fields = ['id', 'fecha_creacion']
+        ref_name = 'TipoUsuario'
+
+
+class EstadoCasoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EstadoCaso
+        fields = ['id', 'nombre', 'descripcion', 'es_activo']
+        read_only_fields = ['id']
+        ref_name = 'EstadoCaso'
+
+
+class CategoriaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Categorias
+        fields = ['id', 'nombre', 'descripcion', 'icono', 'es_activo']
+        read_only_fields = ['id']
+        ref_name = 'Categoria'
+
+
+class TipoMensajeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TipoMensaje
+        fields = ['id', 'nombre', 'descripcion']
+        read_only_fields = ['id']
+        ref_name = 'TipoMensaje'
+
+
+class EstadoReporteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EstadoReporte
+        fields = ['id', 'nombre', 'descripcion']
+        read_only_fields = ['id']
+        ref_name = 'EstadoReporte'
+
+
+class TipoSancionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TipoSancion
+        fields = ['id', 'nombre', 'descripcion', 'duracion_dias', 'es_activo']
+        read_only_fields = ['id']
+        ref_name = 'TipoSancion'
+
+
+class EstadoOCRSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EstadoOCR
+        fields = ['id', 'nombre', 'descripcion']
+        read_only_fields = ['id']
+        ref_name = 'EstadoOCR'
+
+
+# ============================================
+# USUARIOS
+# ============================================
+
+class UsuarioSerializer(serializers.ModelSerializer):
+    """Serializer para lectura de usuarios"""
     tipo_usuario = TipoUsuarioSerializer(source='id_tipo_usuario', read_only=True)
     
     class Meta:
         model = Usuarios
         fields = [
             'id', 'nombres', 'apellido_paterno', 'apellido_materno',
-            'correo', 'telefono', 'tipo_usuario', 'ciudad', 'estado',
-            'colonia', 'direccion', 'codigo_postal', 'imagen_perfil',
-            'esta_activo', 'verificado', 'fecha_registro',
+            'correo', 'telefono', 'tipo_usuario',
+            'ciudad', 'estado', 'colonia', 'direccion', 'codigo_postal',
+            'imagen_perfil', 'esta_activo', 'verificado', 'fecha_registro',
             'imagen_ine_frontal_url', 'imagen_ine_trasera_url', 'ultimo_acceso'
         ]
         read_only_fields = ['id', 'fecha_registro', 'ultimo_acceso']
+        ref_name = 'Usuario'
 
 
-class UsuarioCreateSerializer(serializers.ModelSerializer):
+class UsuarioWriteSerializer(serializers.ModelSerializer):
+    """Serializer para creación/actualización de usuarios"""
+    contrasena = serializers.CharField(write_only=True, required=False, min_length=6)
+    
     class Meta:
         model = Usuarios
         fields = [
@@ -51,41 +164,17 @@ class UsuarioCreateSerializer(serializers.ModelSerializer):
             'imagen_perfil', 'imagen_ine_frontal_url', 'imagen_ine_trasera_url'
         ]
         extra_kwargs = {
-            'contrasena': {'write_only': True, 'required': True},
-            'colonia': {'required': False},
-            'direccion': {'required': False},
-            'codigo_postal': {'required': False},
-            'imagen_perfil': {'required': False},
-            'imagen_ine_frontal_url': {'required': False},
-            'imagen_ine_trasera_url': {'required': False}
+            'contrasena': {'required': False}
         }
+        ref_name = 'UsuarioWrite'
     
     def create(self, validated_data):
-        password = validated_data.pop('contrasena')
+        password = validated_data.pop('contrasena', None)
         usuario = Usuarios.objects.create(**validated_data)
-        usuario.contrasena = make_password(password)
-        usuario.save()
+        if password:
+            usuario.contrasena = make_password(password)
+            usuario.save()
         return usuario
-
-
-class UsuarioUpdateSerializer(serializers.ModelSerializer):
-    contrasena = serializers.CharField(write_only=True, required=False, allow_blank=True)
-    
-    class Meta:
-        model = Usuarios
-        fields = [
-            'nombres', 'apellido_paterno', 'apellido_materno',
-            'telefono', 'ciudad', 'estado', 'colonia', 'direccion',
-            'codigo_postal', 'imagen_perfil', 'contrasena'
-        ]
-        extra_kwargs = {
-            'nombres': {'required': False},
-            'apellido_paterno': {'required': False},
-            'apellido_materno': {'required': False},
-            'telefono': {'required': False},
-            'ciudad': {'required': False},
-            'estado': {'required': False},
-        }
     
     def update(self, instance, validated_data):
         password = validated_data.pop('contrasena', None)
@@ -97,298 +186,221 @@ class UsuarioUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 
-class CambiarContrasenaSerializer(serializers.Serializer):
-    contrasena_actual = serializers.CharField(write_only=True, required=True)
-    contrasena_nueva = serializers.CharField(write_only=True, required=True, min_length=8)
-    confirmar_contrasena = serializers.CharField(write_only=True, required=True)
-    
-    def validate(self, data):
-        if data['contrasena_nueva'] != data['confirmar_contrasena']:
-            raise serializers.ValidationError({"confirmar_contrasena": "Las contraseñas no coinciden"})
-        return data
+# ============================================
+# CASOS
+# ============================================
 
-
-class ActualizarTelefonoSerializer(serializers.Serializer):
-    telefono = serializers.CharField(max_length=15, required=True)
-
-
-class AsignarTipoUsuarioSerializer(serializers.Serializer):
-    id_tipo_usuario = serializers.IntegerField(required=True)
-
-
-class EstadoCasoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EstadoCaso
-        fields = ['id', 'nombre', 'descripcion', 'es_activo']
-
-
-class CategoriaSerializer(serializers.ModelSerializer):
-    total_casos = serializers.IntegerField(read_only=True, required=False)
-    
-    class Meta:
-        model = Categorias
-        fields = ['id', 'nombre', 'descripcion', 'icono', 'es_activo', 'total_casos']
-
-
-class CasoListSerializer(serializers.ModelSerializer):
-    beneficiario = serializers.SerializerMethodField()
+class CasoSerializer(serializers.ModelSerializer):
+    """Serializer para lectura de casos"""
+    beneficiario = UsuarioSerializer(source='id_beneficiario', read_only=True)
     estado = EstadoCasoSerializer(source='id_estado', read_only=True)
     categorias = serializers.SerializerMethodField()
     
     class Meta:
         model = Casos
         fields = [
-            'id', 'titulo', 'descripcion', 'imagen1', 'colonia',
-            'beneficiario', 'estado', 'categorias', 'vistas',
-            'fecha_creacion', 'esta_abierto', 'prioridad'
+            'id', 'titulo', 'descripcion', 'colonia', 'entidad',
+            'latitud', 'longitud', 'esta_abierto', 'prioridad',
+            'vistas', 'beneficiario', 'estado', 'categorias',
+            'fecha_creacion', 'fecha_publicacion', 'fecha_conclusion',
+            'imagen1', 'imagen2', 'imagen3', 'imagen4'
         ]
-    
-    def get_beneficiario(self, obj):
-        if obj.id_beneficiario:
-            return {
-                'id': obj.id_beneficiario.id,
-                'nombre': f"{obj.id_beneficiario.nombres} {obj.id_beneficiario.apellido_paterno}"
-            }
-        return None
+        read_only_fields = ['id', 'vistas', 'fecha_creacion']
+        ref_name = 'Caso'
     
     def get_categorias(self, obj):
-        caso_cats = CasoCategorias.objects.filter(id_caso=obj).select_related('id_categoria')
-        return [cc.id_categoria.nombre for cc in caso_cats if cc.id_categoria]
+        return [cc.id_categoria.nombre for cc in obj.casocategorias_set.all()]
 
 
-class CasoDetailSerializer(serializers.ModelSerializer):
-    beneficiario = UsuarioDetailSerializer(source='id_beneficiario', read_only=True)
-    estado = EstadoCasoSerializer(source='id_estado', read_only=True)
-    categorias = serializers.SerializerMethodField()
-    coordenadas = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Casos
-        fields = [
-            'id', 'titulo', 'descripcion', 'entidad', 'colonia', 'direccion',
-            'codigo_postal', 'imagen1', 'imagen2', 'imagen3', 'imagen4',
-            'latitud', 'longitud', 'coordenadas', 'beneficiario', 'estado',
-            'categorias', 'vistas', 'compartido', 'fecha_creacion',
-            'fecha_publicacion', 'fecha_conclusion', 'fecha_limite',
-            'esta_abierto', 'prioridad'
-        ]
-        read_only_fields = ['id', 'vistas', 'compartido', 'fecha_creacion']
-    
-    def get_categorias(self, obj):
-        caso_cats = CasoCategorias.objects.filter(id_caso=obj).select_related('id_categoria')
-        return CategoriaSerializer([cc.id_categoria for cc in caso_cats if cc.id_categoria], many=True).data
-    
-    def get_coordenadas(self, obj):
-        if obj.latitud and obj.longitud:
-            return {'lat': float(obj.latitud), 'lng': float(obj.longitud)}
-        return None
-
-
-class CasoCreateUpdateSerializer(serializers.ModelSerializer):
-    categorias = serializers.ListField(
+class CasoWriteSerializer(serializers.ModelSerializer):
+    """Serializer para creación/actualización de casos"""
+    categorias_ids = serializers.ListField(
         child=serializers.IntegerField(),
         write_only=True,
-        required=False,
-        help_text="Lista de IDs de categorías"
+        required=False
     )
     
     class Meta:
         model = Casos
         fields = [
-            'titulo', 'descripcion', 'entidad', 'colonia', 'direccion',
-            'codigo_postal', 'imagen1', 'imagen2', 'imagen3', 'imagen4',
-            'latitud', 'longitud', 'categorias', 'id_estado', 'fecha_limite',
-            'prioridad', 'id_beneficiario'
+            'titulo', 'descripcion', 'colonia', 'entidad',
+            'latitud', 'longitud', 'prioridad',
+            'id_beneficiario', 'id_estado', 'categorias_ids',
+            'imagen1', 'imagen2', 'imagen3', 'imagen4'
         ]
-        extra_kwargs = {
-            'imagen2': {'required': False},
-            'imagen3': {'required': False},
-            'imagen4': {'required': False},
-            'latitud': {'required': False},
-            'longitud': {'required': False},
-            'categorias': {'required': False},
-            'id_estado': {'required': False},
-            'fecha_limite': {'required': False},
-            'prioridad': {'required': False},
-        }
+        ref_name = 'CasoWrite'
     
     def create(self, validated_data):
-        categorias_ids = validated_data.pop('categorias', [])
+        categorias_ids = validated_data.pop('categorias_ids', [])
         caso = Casos.objects.create(**validated_data)
-        if categorias_ids:
-            for cat_id in categorias_ids:
-                CasoCategorias.objects.create(id_caso=caso, id_categoria_id=cat_id)
+        
+        for cat_id in categorias_ids:
+            CasoCategorias.objects.create(
+                id_caso=caso,
+                id_categoria_id=cat_id
+            )
+        
         return caso
-    
-    def update(self, instance, validated_data):
-        categorias_ids = validated_data.pop('categorias', None)
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-        if categorias_ids is not None:
-            CasoCategorias.objects.filter(id_caso=instance).delete()
-            for cat_id in categorias_ids:
-                CasoCategorias.objects.create(id_caso=instance, id_categoria_id=cat_id)
-        return instance
 
+
+# ============================================
+# RELACIONES
+# ============================================
 
 class CasoCategoriaSerializer(serializers.ModelSerializer):
-    caso = CasoListSerializer(source='id_caso', read_only=True)
+    caso_titulo = serializers.CharField(source='id_caso.titulo', read_only=True)
     categoria = CategoriaSerializer(source='id_categoria', read_only=True)
     
     class Meta:
         model = CasoCategorias
-        fields = ['id', 'caso', 'categoria', 'fecha_asignacion']
-        read_only_fields = ['fecha_asignacion']
+        fields = ['id', 'caso_titulo', 'categoria', 'id_caso', 'id_categoria', 'fecha_asignacion']
+        read_only_fields = ['id', 'fecha_asignacion']
+        ref_name = 'CasoCategoria'
 
+
+# ============================================
+# DONACIONES
+# ============================================
 
 class DonacionSerializer(serializers.ModelSerializer):
-    donador = UsuarioListSerializer(source='id_donador', read_only=True)
-    caso = CasoListSerializer(source='id_caso', read_only=True)
+    donador = UsuarioSerializer(source='id_donador', read_only=True)
+    caso_titulo = serializers.CharField(source='id_caso.titulo', read_only=True)
     
     class Meta:
         model = Donaciones
         fields = [
-            'id', 'donador', 'caso', 'monto', 'metodo_pago',
-            'referencia_pago', 'estado_donacion', 'es_anonima', 
-            'mensaje_donador', 'fecha_compromiso', 'fecha_pago'
+            'id', 'monto', 'estado_donacion', 'metodo_pago',
+            'donador', 'caso_titulo', 'id_donador', 'id_caso',
+            'fecha_compromiso', 'fecha_pago', 'es_anonima',
+            'mensaje_donador'
         ]
-        read_only_fields = ['id', 'fecha_compromiso']
+        read_only_fields = ['id']
+        ref_name = 'Donacion'
 
 
-class DonacionCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Donaciones
-        fields = ['id_caso', 'monto', 'metodo_pago', 'es_anonima', 'mensaje_donador']
-        extra_kwargs = {
-            'es_anonima': {'required': False, 'default': False},
-            'mensaje_donador': {'required': False, 'allow_blank': True}
-        }
-
+# ============================================
+# EVIDENCIAS
+# ============================================
 
 class EvidenciaSerializer(serializers.ModelSerializer):
-    caso = CasoListSerializer(source='id_caso', read_only=True)
-    usuario = UsuarioListSerializer(source='id_usuario', read_only=True)
+    usuario = serializers.StringRelatedField(source='id_usuario', read_only=True)
+    caso = serializers.StringRelatedField(source='id_caso', read_only=True)
     
     class Meta:
         model = Evidencias
         fields = [
-            'id', 'caso', 'usuario', 'titulo', 'descripcion', 'tipo_archivo',
-            'ruta_archivo', 'imagen1', 'imagen2', 'fecha_creacion', 'es_publico'
+            'id', 'titulo', 'descripcion', 'tipo_archivo',
+            'ruta_archivo', 'usuario', 'caso', 'id_usuario',
+            'id_caso', 'fecha_creacion', 'es_publico',
+            'imagen1', 'imagen2'
         ]
         read_only_fields = ['id', 'fecha_creacion']
+        ref_name = 'Evidencia'
 
 
-class TipoMensajeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TipoMensaje
-        fields = ['id', 'nombre', 'descripcion']
-
-
-class ConversacionSerializer(serializers.ModelSerializer):
-    usuario1 = UsuarioListSerializer(source='id_usuario1', read_only=True)
-    usuario2 = UsuarioListSerializer(source='id_usuario2', read_only=True)
-    caso = CasoListSerializer(source='id_caso', read_only=True)
-    
-    class Meta:
-        model = Conversaciones
-        fields = [
-            'id', 'caso', 'usuario1', 'usuario2', 
-            'fecha_creacion', 'esta_activa'
-        ]
-        read_only_fields = ['id', 'fecha_creacion']
-
+# ============================================
+# MENSAJERÍA
+# ============================================
 
 class MensajeSerializer(serializers.ModelSerializer):
-    conversacion = ConversacionSerializer(source='id_conversacion', read_only=True)
-    emisor = UsuarioListSerializer(source='id_emisor', read_only=True)
-    tipo_mensaje = TipoMensajeSerializer(source='id_tipo', read_only=True)
+    emisor_nombre = serializers.CharField(source='id_emisor.nombres', read_only=True)
+    tipo = TipoMensajeSerializer(source='id_tipo', read_only=True)
     
     class Meta:
         model = Mensajes
         fields = [
-            'id', 'conversacion', 'emisor', 'tipo_mensaje', 'contenido',
-            'adjunto', 'fecha_envio', 'fecha_leido', 'es_leido', 'es_eliminado'
+            'id', 'contenido', 'es_leido', 'emisor_nombre', 'tipo',
+            'id_conversacion', 'id_emisor', 'id_tipo',
+            'fecha_envio', 'fecha_leido', 'adjunto'
         ]
-        read_only_fields = ['id', 'fecha_envio', 'fecha_leido']
+        read_only_fields = ['id', 'fecha_envio']
+        ref_name = 'Mensaje'
 
 
-class EstadoReporteSerializer(serializers.ModelSerializer):
+class ConversacionSerializer(serializers.ModelSerializer):
+    usuario1_nombre = serializers.CharField(source='id_usuario1.nombres', read_only=True)
+    usuario2_nombre = serializers.CharField(source='id_usuario2.nombres', read_only=True)
+    caso = serializers.StringRelatedField(source='id_caso', read_only=True)
+    
     class Meta:
-        model = EstadoReporte
-        fields = ['id', 'nombre', 'descripcion']
+        model = Conversaciones
+        fields = [
+            'id', 'usuario1_nombre', 'usuario2_nombre', 'caso',
+            'id_usuario1', 'id_usuario2', 'id_caso',
+            'fecha_creacion', 'esta_activa'
+        ]
+        read_only_fields = ['id', 'fecha_creacion']
+        ref_name = 'Conversacion'
 
+
+# ============================================
+# REPORTES Y SANCIONES
+# ============================================
 
 class ReporteSerializer(serializers.ModelSerializer):
-    usuario_reportado = UsuarioListSerializer(source='id_usuario_reportado', read_only=True)
-    usuario_reporte = UsuarioListSerializer(source='id_usuario_reporte', read_only=True)
-    caso = CasoListSerializer(source='id_caso', read_only=True)
+    usuario_reportado_nombre = serializers.CharField(source='id_usuario_reportado.nombres', read_only=True)
+    usuario_reporte_nombre = serializers.CharField(source='id_usuario_reporte.nombres', read_only=True)
     estado = EstadoReporteSerializer(source='id_estado', read_only=True)
     
     class Meta:
         model = Reportes
         fields = [
-            'id', 'usuario_reportado', 'usuario_reporte', 'caso', 'estado',
-            'titulo', 'descripcion', 'evidencia1', 'evidencia2', 'evidencia3',
+            'id', 'titulo', 'descripcion',
+            'usuario_reportado_nombre', 'usuario_reporte_nombre', 'estado',
+            'id_usuario_reportado', 'id_usuario_reporte', 'id_estado', 'id_caso',
+            'evidencia1', 'evidencia2', 'evidencia3',
             'fecha_creacion', 'fecha_resolucion', 'resolucion'
         ]
         read_only_fields = ['id', 'fecha_creacion']
-
-
-class TipoSancionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TipoSancion
-        fields = ['id', 'nombre', 'descripcion', 'duracion_dias', 'es_activo']
+        ref_name = 'Reporte'
 
 
 class SancionSerializer(serializers.ModelSerializer):
-    usuario = UsuarioListSerializer(source='id_usuario', read_only=True)
-    reporte = ReporteSerializer(source='id_reporte', read_only=True)
-    tipo_sancion = TipoSancionSerializer(source='id_tipo_sancion', read_only=True)
+    usuario_nombre = serializers.CharField(source='id_usuario.nombres', read_only=True)
+    tipo = TipoSancionSerializer(source='id_tipo_sancion', read_only=True)
     
     class Meta:
         model = Sanciones
         fields = [
-            'id', 'usuario', 'reporte', 'tipo_sancion', 'motivo',
-            'fecha_inicio', 'fecha_fin', 'es_activa'
+            'id', 'motivo', 'es_activa',
+            'usuario_nombre', 'tipo', 'id_usuario', 'id_tipo_sancion', 'id_reporte',
+            'fecha_inicio', 'fecha_fin'
         ]
-        read_only_fields = ['id', 'fecha_inicio']
+        read_only_fields = ['id']
+        ref_name = 'Sancion'
 
 
-class EstadoOCRSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EstadoOCR
-        fields = ['id', 'nombre', 'descripcion']
-
+# ============================================
+# OCR
+# ============================================
 
 class DocumentoOCRSerializer(serializers.ModelSerializer):
-    usuario = UsuarioListSerializer(source='id_usuario', read_only=True)
+    usuario_nombre = serializers.CharField(source='id_usuario.nombres', read_only=True)
     estado = EstadoOCRSerializer(source='id_estado', read_only=True)
-    validado_por_detalle = UsuarioListSerializer(source='validado_por', read_only=True)
     
     class Meta:
         model = DocumentosOCR
         fields = [
-            'id', 'usuario', 'tipo_documento', 'id_relacionado', 'ruta_imagen',
-            'estado', 'fecha_subida', 'fecha_procesamiento', 'intentos_procesamiento',
+            'id', 'tipo_documento', 'ruta_imagen',
             'nombre_extraido', 'apellido_paterno_extraido', 'apellido_materno_extraido',
-            'curp_extraida', 'clave_electoral_extraida', 'fecha_nacimiento_extraida',
-            'sexo_extraido', 'direccion_extraida', 'vigencia_extraida',
-            'confianza_ocr', 'datos_validados', 'validado_por_detalle',
-            'fecha_validacion', 'notas_validacion'
+            'curp_extraida', 'confianza_ocr', 'datos_validados',
+            'usuario_nombre', 'estado', 'id_usuario', 'id_estado',
+            'fecha_subida', 'fecha_procesamiento'
         ]
-        read_only_fields = ['id', 'fecha_subida']
+        read_only_fields = ['id', 'fecha_subida', 'fecha_procesamiento']
+        ref_name = 'DocumentoOCR'
 
 
 class LogOCRSerializer(serializers.ModelSerializer):
-    documento = DocumentoOCRSerializer(source='id_documento_ocr', read_only=True)
-    estado_anterior_detalle = EstadoOCRSerializer(source='estado_anterior', read_only=True)
-    estado_nuevo_detalle = EstadoOCRSerializer(source='estado_nuevo', read_only=True)
+    estado_anterior_nombre = serializers.CharField(source='estado_anterior.nombre', read_only=True)
+    estado_nuevo_nombre = serializers.CharField(source='estado_nuevo.nombre', read_only=True)
     
     class Meta:
         model = LogOCR
         fields = [
-            'id', 'documento', 'estado_anterior_detalle', 'estado_nuevo_detalle',
+            'id', 'id_documento_ocr', 
+            'estado_anterior_nombre', 'estado_nuevo_nombre',
             'mensaje', 'error_detalle', 'tiempo_procesamiento_ms', 'fecha_evento'
         ]
         read_only_fields = ['id', 'fecha_evento']
+        ref_name = 'LogOCR'

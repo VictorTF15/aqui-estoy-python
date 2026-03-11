@@ -1,0 +1,301 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Casos - Admin{% endblock %}
+{% block page_title %}Gestión de Casos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-folder-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Total Casos</h6>
+                        <h3 class="mb-0" id="totalCasos">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Activos</h6>
+                        <h3 class="mb-0" id="casosActivos">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-clock-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Pendientes</h6>
+                        <h3 class="mb-0" id="casosPendientes">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-0">Total Recaudado</h6>
+                        <h3 class="mb-0" id="totalRecaudado">$0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Categoría</label>
+                    <select id="filtroCategoria" class="form-select">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Estado</label>
+                    <select id="filtroEstado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="1">Activo</option>
+                        <option value="2">Completado</option>
+                        <option value="3">Cancelado</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" id="busqueda" class="form-control" placeholder="Título o beneficiario...">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button onclick="aplicarFiltros()" class="btn btn-primary w-100">
+                        <i class="bi bi-filter"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Casos -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Lista de Casos</h5>
+            <button class="btn btn-primary" onclick="window.location.href='/adm/casos/crear/'">
+                <i class="bi bi-plus-circle"></i> Nuevo Caso
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+
+            <div id="tablaCasos" class="table-responsive d-none">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Caso</th>
+                            <th>Beneficiario</th>
+                            <th>Categoría</th>
+                            <th>Estado</th>
+                            <th>Monto Necesario</th>
+                            <th>Recaudado</th>
+                            <th>Progreso</th>
+                            <th>Fecha</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaCasos">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="sinResultados" class="text-center py-5 d-none">
+                <i class="bi bi-folder-x display-1 text-muted"></i>
+                <p class="text-muted mt-3">No se encontraron casos</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let casos = [];
+let categorias = [];
+
+async function cargarCategorias() {
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/categorias/`);
+        const data = await response.json();
+        categorias = data.results || data;
+        
+        const select = document.getElementById('filtroCategoria');
+        categorias.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.nombre;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error al cargar categorías:', error);
+    }
+}
+
+async function cargarCasos(filtros = {}) {
+    const loading = document.getElementById('loading');
+    const tabla = document.getElementById('tablaCasos');
+    const sinResultados = document.getElementById('sinResultados');
+
+    loading.classList.remove('d-none');
+    tabla.classList.add('d-none');
+    sinResultados.classList.add('d-none');
+
+    try {
+        const params = new URLSearchParams(filtros);
+        const response = await fetchWithAuth(`${API_BASE_URL}/casos/?${params}`);
+        const data = await response.json();
+        casos = data.results || data;
+
+        loading.classList.add('d-none');
+
+        if (casos.length === 0) {
+            sinResultados.classList.remove('d-none');
+        } else {
+            mostrarCasos(casos);
+            tabla.classList.remove('d-none');
+            calcularEstadisticas(casos);
+        }
+    } catch (error) {
+        console.error('Error al cargar casos:', error);
+        loading.classList.add('d-none');
+        alert('Error al cargar los casos');
+    }
+}
+
+function mostrarCasos(casos) {
+    const tbody = document.getElementById('listaCasos');
+    tbody.innerHTML = casos.map(caso => {
+        const porcentaje = Math.min((caso.monto_recolectado / caso.monto_necesario) * 100, 100);
+        const estadoClass = {
+            'Activo': 'success',
+            'Completado': 'info',
+            'Cancelado': 'danger'
+        };
+
+        return `
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center">
+                        ${caso.imagen_principal ? 
+                            `<img src="${caso.imagen_principal}" class="rounded me-2" style="width: 50px; height: 50px; object-fit: cover;">` :
+                            '<div class="bg-secondary rounded me-2" style="width: 50px; height: 50px;"></div>'
+                        }
+                        <div>
+                            <div class="fw-medium">${caso.titulo}</div>
+                            <small class="text-muted">${caso.descripcion.substring(0, 50)}...</small>
+                        </div>
+                    </div>
+                </td>
+                <td>${caso.usuario_nombre || 'N/A'}</td>
+                <td><span class="badge bg-secondary">${caso.categoria_nombre || 'N/A'}</span></td>
+                <td><span class="badge bg-${estadoClass[caso.estado_nombre] || 'secondary'}">${caso.estado_nombre || 'N/A'}</span></td>
+                <td>$${Number(caso.monto_necesario).toLocaleString()}</td>
+                <td>$${Number(caso.monto_recolectado || 0).toLocaleString()}</td>
+                <td>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar bg-primary" style="width: ${porcentaje}%">
+                            ${porcentaje.toFixed(0)}%
+                        </div>
+                    </div>
+                </td>
+                <td>${new Date(caso.fecha_creacion).toLocaleDateString()}</td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                        <a href="/adm/casos/${caso.id}/" class="btn btn-outline-primary" title="Ver">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="/adm/casos/${caso.id}/editar/" class="btn btn-outline-warning" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button onclick="eliminarCaso(${caso.id}, '${caso.titulo.replace(/'/g, "\\'")}')" 
+                                class="btn btn-outline-danger" title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function calcularEstadisticas(casos) {
+    document.getElementById('totalCasos').textContent = casos.length;
+    
+    const activos = casos.filter(c => c.estado_nombre === 'Activo').length;
+    document.getElementById('casosActivos').textContent = activos;
+    
+    const pendientes = casos.filter(c => c.estado_nombre === 'Pendiente').length;
+    document.getElementById('casosPendientes').textContent = pendientes;
+    
+    const totalRecaudado = casos.reduce((sum, c) => sum + (Number(c.monto_recolectado) || 0), 0);
+    document.getElementById('totalRecaudado').textContent = '$' + totalRecaudado.toLocaleString();
+}
+
+function aplicarFiltros() {
+    const filtros = {};
+    
+    const categoria = document.getElementById('filtroCategoria').value;
+    if (categoria) filtros.categoria = categoria;
+    
+    const estado = document.getElementById('filtroEstado').value;
+    if (estado) filtros.estado = estado;
+    
+    const busqueda = document.getElementById('busqueda').value;
+    if (busqueda) filtros.search = busqueda;
+    
+    cargarCasos(filtros);
+}
+
+async function eliminarCaso(casoId, titulo) {
+    if (!confirm(`¿Estás seguro de eliminar el caso "${titulo}"?`)) return;
+    
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/casos/${casoId}/`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            alert('Caso eliminado correctamente');
+            cargarCasos();
+        } else {
+            alert('Error al eliminar el caso');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al eliminar el caso');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    cargarCategorias();
+    cargarCasos();
+});
+</script>
+{% endblock %}

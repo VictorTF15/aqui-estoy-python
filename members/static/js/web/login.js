@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Redirigir después de 1 segundo
                 setTimeout(() => {
-                    window.location.href = '/web/home/';
+                    window.location.href = '/home/';
                 }, 1000);
             } else {
                 showAlert(result.error || 'Error al iniciar sesión. Verifica tus credenciales.');
@@ -81,6 +81,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Verificar si ya está autenticado
     if (authService.isAuthenticated()) {
-        window.location.href = '/web/home/';
+        window.location.href = '/home/';
     }
 });

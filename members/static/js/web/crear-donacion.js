@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Verificar autenticación
     const profile = await authService.getProfile();
     if (!profile.success) {
-        window.location.href = '/web/login/';
+        window.location.href = '/login/';
         return;
     }
     
@@ -167,7 +167,7 @@ function mostrarModalExito() {
     
     // Opcional: redirigir automáticamente después de unos segundos
     setTimeout(() => {
-        window.location.href = '/web/donaciones/';
+        window.location.href = '/donaciones/';
     }, 5000);
 }
 

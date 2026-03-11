@@ -1,7 +1,7 @@
 {% extends 'web/base_web.html' %}
 {% load static %}
 
-{% block title %}Casos - Tonalli{% endblock %}
+{% block title %}Casos - Aqui Estoy!{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -12,7 +12,7 @@
             <p class="text-muted">Encuentra casos que necesitan tu apoyo</p>
         </div>
         <div class="col-md-4 text-end">
-            <button class="btn btn-primary" onclick="window.location.href='{% url 'crear_caso_web' %}'">
+            <button class="btn btn-primary" onclick="window.location.href='/casos/crear/'">
                 <i class="bi bi-plus-circle"></i> Crear Caso
             </button>
         </div>
@@ -23,54 +23,199 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <input type="text" class="form-control" id="searchInput" placeholder="Buscar casos...">
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" id="categoriaFilter">
+                    <label class="form-label">Categoría</label>
+                    <select id="filtroCategoria" class="form-select">
                         <option value="">Todas las categorías</option>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <select class="form-select" id="estadoFilter">
+                <div class="col-md-4">
+                    <label class="form-label">Estado</label>
+                    <select id="filtroEstado" class="form-select">
                         <option value="">Todos los estados</option>
+                        <option value="activo">Activos</option>
+                        <option value="completado">Completados</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <button class="btn btn-outline-secondary w-100" onclick="limpiarFiltros()">
-                        <i class="bi bi-x-circle"></i> Limpiar
+                <div class="col-md-4 d-flex align-items-end">
+                    <button onclick="aplicarFiltros()" class="btn btn-primary w-100">
+                        Aplicar Filtros
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Resultados -->
-    <div class="row mb-3">
-        <div class="col-12">
-            <p class="text-muted">Mostrando <span id="totalCasos">0</span> casos</p>
+    <!-- Loading -->
+    <div id="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
         </div>
+        <p class="mt-3 text-muted">Cargando casos...</p>
     </div>
 
-    <div class="row g-3" id="casosContainer">
-        <!-- Loading -->
-        <div class="col-12 text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Cargando...</span>
-            </div>
-        </div>
+    <!-- Grid de Casos -->
+    <div id="casosGrid" class="row g-4 d-none">
+        <!-- Los casos se cargarán aquí dinámicamente -->
     </div>
 
-    <!-- Paginación -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <nav aria-label="Paginación de casos">
-                <ul class="pagination justify-content-center" id="paginationContainer"></ul>
-            </nav>
-        </div>
+    <!-- Sin Resultados -->
+    <div id="noResults" class="text-center py-5 d-none">
+        <i class="bi bi-inbox fs-1 text-muted"></i>
+        <p class="text-muted mt-3">No se encontraron casos</p>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
-<script src="{% static 'js/web/casos-lista.js' %}"></script>
+<script src="{% static 'js/api-client.js' %}"></script>
+<script>
+    const API_BASE_URL = 'http://127.0.0.1:8000/api';
+    let categorias = [];
+
+    async function fetchWithAuth(url, options = {}) {
+        const token = localStorage.getItem('access_token');
+        
+        const headers = {
+            'Content-Type': 'application/json',
+            ...(options.headers || {})
+        };
+        
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        return fetch(url, {
+            ...options,
+            headers
+        });
+    }
+
+    async function cargarCategorias() {
+        try {
+            const response = await fetchWithAuth(`${API_BASE_URL}/categorias/`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                categorias = data.results || data;
+                
+                const select = document.getElementById('filtroCategoria');
+                categorias.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = cat.nombre;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error al cargar categorías:', error);
+        }
+    }
+
+    async function cargarCasos(filtros = {}) {
+        const loading = document.getElementById('loading');
+        const grid = document.getElementById('casosGrid');
+        const noResults = document.getElementById('noResults');
+
+        loading.classList.remove('d-none');
+        grid.classList.add('d-none');
+        noResults.classList.add('d-none');
+
+        try {
+            const params = new URLSearchParams(filtros);
+            const response = await fetchWithAuth(`${API_BASE_URL}/casos/?${params}`);
+            
+            if (response.status === 401) {
+                alert('Sesión expirada. Por favor, inicia sesión nuevamente.');
+                window.location.href = '/login/';  // SIN /web/
+                return;
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                const casos = data.results || data;
+                
+                loading.classList.add('d-none');
+
+                if (casos.length === 0) {
+                    noResults.classList.remove('d-none');
+                } else {
+                    mostrarCasos(casos);
+                    grid.classList.remove('d-none');
+                }
+            } else {
+                throw new Error('Error al cargar casos');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            loading.classList.add('d-none');
+            alert('Error al cargar los casos');
+        }
+    }
+
+    function mostrarCasos(casos) {
+        const grid = document.getElementById('casosGrid');
+        grid.innerHTML = casos.map(caso => crearTarjetaCaso(caso)).join('');
+    }
+
+    function crearTarjetaCaso(caso) {
+        const porcentaje = Math.min((caso.monto_recolectado / caso.monto_necesario) * 100, 100);
+        const imagen = caso.imagen_principal || 'https://via.placeholder.com/400x250?text=Sin+Imagen';
+
+        return `
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm hover-shadow">
+                    <img src="${imagen}" class="card-img-top" alt="${caso.titulo}" style="height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <h5 class="card-title">${caso.titulo}</h5>
+                        <p class="card-text text-muted small">${caso.descripcion.substring(0, 100)}...</p>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between text-sm mb-1">
+                                <span class="text-muted">Recaudado</span>
+                                <span class="fw-bold text-primary">${porcentaje.toFixed(0)}%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-primary" style="width: ${porcentaje}%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between text-sm mt-1">
+                                <span class="text-muted">$${Number(caso.monto_recolectado || 0).toLocaleString()}</span>
+                                <span class="text-muted">Meta: $${Number(caso.monto_necesario).toLocaleString()}</span>
+                            </div>
+                        </div>
+
+                        <a href="/casos/${caso.id}/" class="btn btn-primary w-100">Ver Detalles</a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function aplicarFiltros() {
+        const categoriaId = document.getElementById('filtroCategoria').value;
+        const estado = document.getElementById('filtroEstado').value;
+
+        const filtros = {};
+        if (categoriaId) filtros.categoria = categoriaId;
+        if (estado) filtros.estado = estado;
+
+        cargarCasos(filtros);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            alert('Debes iniciar sesión para ver los casos');
+            window.location.href = '/login/';  // SIN /web/
+            return;
+        }
+
+        cargarCategorias();
+        cargarCasos();
+    });
+</script>
+
+<style>
+    .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        transition: box-shadow 0.3s ease-in-out;
+    }
+</style>
 {% endblock %}
