@@ -16,46 +16,38 @@ from .models import (
 # ============================================
 
 class CustomTokenObtainPairSerializer(serializers.Serializer):
-    """Serializer personalizado para autenticación con correo electrónico"""
+    """Serializador de inicio de sesión con correo + contraseña."""
     correo = serializers.EmailField(required=True)
-    password = serializers.CharField(required=False, write_only=True, style={'input_type': 'password'})
     contrasena = serializers.CharField(required=False, write_only=True, style={'input_type': 'password'})
-    
+    password = serializers.CharField(required=False, write_only=True, style={'input_type': 'password'})  # compatibilidad
+
     class Meta:
         ref_name = 'Login'
-    
+
     def validate(self, attrs):
         correo = attrs.get('correo')
-        # Aceptar tanto 'password' como 'contrasena'
-        password = attrs.get('password') or attrs.get('contrasena')
-        
-        if not password:
-            raise serializers.ValidationError({'password': 'Este campo es requerido'})
-        
-        # Buscar usuario por correo
+        clave = attrs.get('contrasena') or attrs.get('password')
+
+        if not clave:
+            raise serializers.ValidationError({'contrasena': 'Este campo es requerido.'})
+
         try:
             usuario = Usuarios.objects.get(correo=correo)
         except Usuarios.DoesNotExist:
-            raise serializers.ValidationError({'detail': 'Credenciales incorrectas'})
-        
-        # Verificar si está activo
+            raise serializers.ValidationError({'detail': 'Credenciales incorrectas.'})
+
         if not usuario.esta_activo:
-            raise serializers.ValidationError({'detail': 'Esta cuenta está inactiva'})
-        
-        # Verificar contraseña
-        if not usuario.check_password(password):
-            raise serializers.ValidationError({'detail': 'Credenciales incorrectas'})
-        
-        # Generar tokens usando RefreshToken
-        from rest_framework_simplejwt.tokens import RefreshToken
+            raise serializers.ValidationError({'detail': 'La cuenta está inactiva.'})
+
+        if not usuario.check_password(clave):
+            raise serializers.ValidationError({'detail': 'Credenciales incorrectas.'})
+
         refresh = RefreshToken.for_user(usuario)
-        
-        # Agregar claims personalizados
         refresh['correo'] = usuario.correo
         refresh['nombres'] = usuario.nombres
         refresh['tipo_usuario'] = usuario.id_tipo_usuario.nombre if usuario.id_tipo_usuario else None
         refresh['user_id'] = usuario.id
-        
+
         return {
             'refresh': str(refresh),
             'access': str(refresh.access_token),

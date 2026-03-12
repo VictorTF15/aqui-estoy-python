@@ -1,15 +1,11 @@
-from rest_framework import viewsets, status, filters, serializers
+from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.exceptions import ValidationError
-from django.db.models import Q, Count
 from django.contrib.auth.hashers import make_password
 from drf_spectacular.utils import extend_schema, extend_schema_view
-
-from .models import * ;
-from .serializers import *
 
 from .models import (
     Usuarios, TipoUsuario, Casos, EstadoCaso, Categorias,
@@ -22,57 +18,32 @@ from .serializers import (
     CustomTokenObtainPairSerializer,
     UsuarioSerializer, UsuarioWriteSerializer,
     TipoUsuarioSerializer, CasoSerializer, CasoWriteSerializer,
-    EstadoCasoSerializer, CategoriaSerializer,
-    CasoCategoriaSerializer, DonacionSerializer,
-    EvidenciaSerializer, ConversacionSerializer, MensajeSerializer,
-    TipoMensajeSerializer, ReporteSerializer, EstadoReporteSerializer,
-    SancionSerializer, TipoSancionSerializer, DocumentoOCRSerializer,
-    EstadoOCRSerializer, LogOCRSerializer
+    EstadoCasoSerializer, CategoriaSerializer, CasoCategoriaSerializer,
+    DonacionSerializer, EvidenciaSerializer, ConversacionSerializer,
+    MensajeSerializer, TipoMensajeSerializer, ReporteSerializer,
+    EstadoReporteSerializer, SancionSerializer, TipoSancionSerializer,
+    DocumentoOCRSerializer, EstadoOCRSerializer, LogOCRSerializer
 )
-
-
-# ============================================
-# AUTENTICACIÓN
-# ============================================
 
 @extend_schema(
     tags=['Autenticación'],
-    description='Login con correo electrónico y contraseña',
+    description='Inicio de sesión con correo y contraseña',
     request=CustomTokenObtainPairSerializer,
     responses={200: CustomTokenObtainPairSerializer}
 )
 class CustomTokenObtainPairView(APIView):
-    """Login con correo electrónico y contraseña"""
     permission_classes = [AllowAny]
-    
+
     def post(self, request):
-        print("=== DEBUG LOGIN ===")
-        print(f"Request data: {request.data}")
-        print(f"Request content type: {request.content_type}")
-        
-        serializer = CustomTokenObtainPairSerializer(data=request.data)
-        
+        serializador = CustomTokenObtainPairSerializer(data=request.data)
         try:
-            print(f"Serializer initial data: {serializer.initial_data}")
-            is_valid = serializer.is_valid(raise_exception=False)
-            print(f"Is valid: {is_valid}")
-            
-            if not is_valid:
-                print(f"Validation errors: {serializer.errors}")
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            
-            print(f"Validated data: {serializer.validated_data}")
-            return Response(serializer.validated_data, status=status.HTTP_200_OK)
-            
-        except ValidationError as e:
-            print(f"ValidationError: {e.detail}")
-            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            print(f"Exception: {type(e).__name__}: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            serializador.is_valid(raise_exception=True)
+            return Response(serializador.validated_data, status=status.HTTP_200_OK)
+        except ValidationError as error:
+            return Response(error.detail, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
             return Response(
-                {'detail': 'Error al procesar la solicitud'},
+                {'detail': 'Error al procesar la solicitud.'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
