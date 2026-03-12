@@ -8,6 +8,9 @@ from django.db.models import Q, Count
 from django.contrib.auth.hashers import make_password
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
+from .models import * ;
+from .serializers import *
+
 from .models import (
     Usuarios, TipoUsuario, Casos, EstadoCaso, Categorias,
     CasoCategorias, Donaciones, Evidencias, Conversaciones,
