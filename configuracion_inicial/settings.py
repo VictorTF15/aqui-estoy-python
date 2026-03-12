@@ -31,7 +31,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -42,30 +41,49 @@ MIDDLEWARE = [
     'django.middleware.locale.LocaleMiddleware',
 ]
 
+ROOT_URLCONF = 'configuracion_inicial.urls'
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-        ssl_require=True
-    )
-}
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'members' / 'templates'],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',
+            ],
+        },
+    },
+]
 
+WSGI_APPLICATION = 'configuracion_inicial.wsgi.application'
+
+
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+LANGUAGE_CODE = 'es-mx'
+USE_I18N = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-
-AUTH_USER_MODEL = 'members.Usuarios'
-
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-
 STATICFILES_DIRS = [
     BASE_DIR / 'members' / 'static',
 ]
@@ -118,28 +136,29 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'Aquí Estoy - API REST',
     'DESCRIPTION': 'API para gestión de casos sociales, donaciones y usuarios',
     'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
     'SCHEMA_PATH_PREFIX': '/api/',
     'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
         'displayOperationId': False,
         'filter': True,
     },
-}
-
-# Configuración de Swagger UI en español
-SWAGGER_SETTINGS = {
-    'SECURITY_DEFINITIONS': {
-        'Bearer': {
-            'type': 'apiKey',
-            'name': 'Authorization',
-            'in': 'header'
-        }
-    },
-    'USE_SESSION_AUTH': False,
-    'JSON_EDITOR': True,
-    'SHOW_REQUEST_HEADERS': True,
-    'SUPPORTED_SUBMIT_METHODS': ['get', 'post', 'put', 'patch', 'delete'],
-    'OPERATIONS_SORTER': 'alpha',
-    'TAGS_SORTER': 'alpha',
+    'TAGS': [
+        {'name': 'Autenticación', 'description': 'Login y gestión de tokens JWT'},
+        {'name': 'Usuarios', 'description': 'Gestión de usuarios del sistema'},
+        {'name': 'Casos', 'description': 'Gestión de casos sociales'},
+        {'name': 'Categorías', 'description': 'Clasificación de casos'},
+        {'name': 'Donaciones', 'description': 'Gestión de donaciones'},
+        {'name': 'Evidencias', 'description': 'Archivos multimedia de casos'},
+        {'name': 'Mensajería', 'description': 'Conversaciones y mensajes'},
+        {'name': 'Moderación', 'description': 'Reportes y sanciones'},
+        {'name': 'OCR', 'description': 'Procesamiento de documentos con OCR'},
+        {'name': 'Catálogos', 'description': 'Datos de referencia del sistema'},
+    ],
+    'POSTPROCESSING_HOOKS': [],
+    'PREPROCESSING_HOOKS': [],
 }
 
 CORS_ALLOWED_ORIGINS = [
@@ -154,3 +173,45 @@ CORS_ALLOW_CREDENTIALS = True
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True' 
 ALLOWED_HOSTS = ['.vercel.app', 'localhost', '127.0.0.1']
+
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
+    'corsheaders.middleware.CorsMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+]
+
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
+}
+
+
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+AUTH_USER_MODEL = 'members.Usuarios'
+
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'members' / 'static',
+]
