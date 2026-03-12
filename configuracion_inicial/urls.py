@@ -12,7 +12,7 @@ urlpatterns = [
     
     # 3. Documentación DRF-Spectacular (Swagger)
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularRedocView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/docs/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),  # Cambiar a Redoc
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     
     # 4. Inclusión de las rutas de la App Members

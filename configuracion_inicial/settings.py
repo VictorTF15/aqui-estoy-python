@@ -136,9 +136,9 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'Aquí Estoy - API REST',
     'DESCRIPTION': 'API para gestión de casos sociales, donaciones y usuarios',
     'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-    'COMPONENT_SPLIT_REQUEST': True,
     'SCHEMA_PATH_PREFIX': '/api/',
+    'DEFAULT_SCHEMA_CLASS': 'members.schema.SchemaAutoEspanol',  # Agregar esto
+    'COMPONENT_SPLIT_REQUEST': True,
     'SWAGGER_UI_SETTINGS': {
         'deepLinking': True,
         'persistAuthorization': True,
