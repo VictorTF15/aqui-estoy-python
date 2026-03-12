@@ -158,9 +158,7 @@ SPECTACULAR_SETTINGS = {
         {'name': 'Catálogos', 'description': 'Datos de referencia del sistema'},
     ],
     'POSTPROCESSING_HOOKS': [],
-    'PREPROCESSING_HOOKS': [
-        'drf_spectacular.openapi.AutoSchema.get_operation_parameters',
-    ],
+    'PREPROCESSING_HOOKS': [],
 }
 
 CORS_ALLOWED_ORIGINS = [
