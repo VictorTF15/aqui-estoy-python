@@ -3,15 +3,13 @@ from django.urls import path, include
 from django.views.generic import RedirectView
 
 urlpatterns = [
-    # 1. LA RAÍZ: Manda a Swagger directamente
-    path('', RedirectView.as_view(url='/api/schema/swagger-ui/', permanent=False)),
+    # Redirige la raíz a la ruta de docs que ya usas
+    path('', RedirectView.as_view(url='/api/docs/', permanent=False)),
     
-    # 2. ADMIN: Panel de control de Django
     path('admin/', admin.site.urls),
     
-    # 3. ESQUEMA API: Lo que genera la documentación
-    path('api/schema/', include('drf_spectacular.urls')),
+    # Asegúrate de que drf_spectacular use la ruta 'api/docs/'
+    path('api/docs/', include('drf_spectacular.urls')), 
     
-    # 4. MEMBERS: Incluye todo lo de tu app
     path('', include('members.urls')),
 ]
