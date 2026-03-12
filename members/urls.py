@@ -17,5 +17,5 @@ urlpatterns = [
     
     # Redirigir la raíz de esta app a la documentación global
     # (Asumiendo que Swagger está en el urls.py principal)
-    path('', RedirectView.as_view(url='/api/schema/swagger-ui/', permanent=False)),
+    path('', RedirectView.as_view(url='/api/docs/', permanent=False)),
 ]
