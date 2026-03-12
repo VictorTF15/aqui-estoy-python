@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.exceptions import ValidationError
 from django.contrib.auth.hashers import make_password
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse
 
 from .models import (
     Usuarios, TipoUsuario, Casos, EstadoCaso, Categorias,
@@ -27,9 +27,13 @@ from .serializers import (
 
 @extend_schema(
     tags=['Autenticación'],
-    description='Inicio de sesión con correo y contraseña',
+    summary='Iniciar sesión',
+    description='Autentica al usuario con correo y contraseña, y devuelve tokens JWT.',
     request=CustomTokenObtainPairSerializer,
-    responses={200: CustomTokenObtainPairSerializer}
+    responses={
+        200: OpenApiResponse(description='Inicio de sesión exitoso.'),
+        400: OpenApiResponse(description='Credenciales inválidas o datos incompletos.'),
+    }
 )
 class CustomTokenObtainPairView(APIView):
     permission_classes = [AllowAny]
@@ -53,12 +57,12 @@ class CustomTokenObtainPairView(APIView):
 # ============================================
 
 @extend_schema_view(
-    list=extend_schema(tags=['Usuarios'], description='Listar todos los usuarios'),
-    create=extend_schema(tags=['Usuarios'], description='Crear un nuevo usuario'),
-    retrieve=extend_schema(tags=['Usuarios'], description='Obtener detalles de un usuario'),
-    update=extend_schema(tags=['Usuarios'], description='Actualizar un usuario'),
-    partial_update=extend_schema(tags=['Usuarios'], description='Actualizar parcialmente un usuario'),
-    destroy=extend_schema(tags=['Usuarios'], description='Eliminar un usuario'),
+    list=extend_schema(tags=['Usuarios'], summary='Listar usuarios', description='Obtiene la lista paginada de usuarios.'),
+    create=extend_schema(tags=['Usuarios'], summary='Crear usuario', description='Crea un nuevo usuario en el sistema.'),
+    retrieve=extend_schema(tags=['Usuarios'], summary='Obtener usuario', description='Obtiene el detalle de un usuario por ID.'),
+    update=extend_schema(tags=['Usuarios'], summary='Actualizar usuario', description='Actualiza todos los campos de un usuario.'),
+    partial_update=extend_schema(tags=['Usuarios'], summary='Actualizar parcialmente usuario', description='Actualiza solo algunos campos de un usuario.'),
+    destroy=extend_schema(tags=['Usuarios'], summary='Eliminar usuario', description='Elimina un usuario del sistema.'),
 )
 class UsuarioViewSet(viewsets.ModelViewSet):
     """Gestión de usuarios del sistema"""
@@ -73,13 +77,21 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             return UsuarioWriteSerializer
         return UsuarioSerializer
 
-    @extend_schema(tags=['Usuarios'], description='Obtener datos del usuario autenticado')
+    @extend_schema(
+        tags=['Usuarios'],
+        summary='Mi perfil',
+        description='Devuelve los datos del usuario autenticado.'
+    )
     @action(detail=False, methods=['get'])
     def me(self, request):
         serializer = UsuarioSerializer(request.user)
         return Response(serializer.data)
 
-    @extend_schema(tags=['Usuarios'], description='Cambiar contraseña de usuario')
+    @extend_schema(
+        tags=['Usuarios'],
+        summary='Cambiar contraseña',
+        description='Permite cambiar la contraseña del usuario indicado.'
+    )
     @action(detail=True, methods=['post'])
     def cambiar_password(self, request, pk=None):
         usuario = self.get_object()
@@ -95,8 +107,8 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Catálogos'], description='Listar tipos de usuario'),
-    retrieve=extend_schema(tags=['Catálogos'], description='Obtener un tipo de usuario'),
+    list=extend_schema(tags=['Catálogos'], summary='Listar tipos de usuario', description='Obtiene los tipos de usuario disponibles.'),
+    retrieve=extend_schema(tags=['Catálogos'], summary='Obtener tipo de usuario', description='Obtiene el detalle de un tipo de usuario por ID.'),
 )
 class TipoUsuarioViewSet(viewsets.ReadOnlyModelViewSet):
     """Catálogo de tipos de usuario"""
@@ -110,12 +122,12 @@ class TipoUsuarioViewSet(viewsets.ReadOnlyModelViewSet):
 # ============================================
 
 @extend_schema_view(
-    list=extend_schema(tags=['Casos'], description='Listar todos los casos'),
-    create=extend_schema(tags=['Casos'], description='Crear un nuevo caso'),
-    retrieve=extend_schema(tags=['Casos'], description='Obtener detalles de un caso'),
-    update=extend_schema(tags=['Casos'], description='Actualizar un caso'),
-    partial_update=extend_schema(tags=['Casos'], description='Actualizar parcialmente un caso'),
-    destroy=extend_schema(tags=['Casos'], description='Eliminar un caso'),
+    list=extend_schema(tags=['Casos'], summary='Listar casos', description='Obtiene la lista de casos.'),
+    create=extend_schema(tags=['Casos'], summary='Crear caso', description='Crea un nuevo caso.'),
+    retrieve=extend_schema(tags=['Casos'], summary='Obtener caso', description='Obtiene el detalle de un caso.'),
+    update=extend_schema(tags=['Casos'], summary='Actualizar caso', description='Actualiza un caso completo.'),
+    partial_update=extend_schema(tags=['Casos'], summary='Actualizar parcialmente caso', description='Actualiza campos específicos de un caso.'),
+    destroy=extend_schema(tags=['Casos'], summary='Eliminar caso', description='Elimina un caso.'),
 )
 class CasoViewSet(viewsets.ModelViewSet):
     """Gestión de casos sociales"""
@@ -130,7 +142,11 @@ class CasoViewSet(viewsets.ModelViewSet):
             return CasoWriteSerializer
         return CasoSerializer
 
-    @extend_schema(tags=['Casos'], description='Obtener casos para visualizar en mapa')
+    @extend_schema(
+        tags=['Casos'],
+        summary='Casos para mapa',
+        description='Devuelve solo casos abiertos con coordenadas para visualización en mapa.'
+    )
     @action(detail=False, methods=['get'])
     def mapa(self, request):
         casos = self.get_queryset().filter(esta_abierto=True)
@@ -143,7 +159,11 @@ class CasoViewSet(viewsets.ModelViewSet):
         } for caso in casos if caso.latitud and caso.longitud]
         return Response(data)
 
-    @extend_schema(tags=['Casos'], description='Obtener estadísticas de casos')
+    @extend_schema(
+        tags=['Casos'],
+        summary='Estadísticas de casos',
+        description='Devuelve totales de casos (total, abiertos y cerrados).'
+    )
     @action(detail=False, methods=['get'])
     def estadisticas(self, request):
         return Response({
@@ -154,8 +174,8 @@ class CasoViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Catálogos'], description='Listar estados de caso'),
-    retrieve=extend_schema(tags=['Catálogos'], description='Obtener un estado de caso'),
+    list=extend_schema(tags=['Catálogos'], summary='Listar estados de caso', description='Obtiene los estados posibles para los casos.'),
+    retrieve=extend_schema(tags=['Catálogos'], summary='Obtener estado de caso', description='Obtiene el detalle de un estado de caso por ID.'),
 )
 class EstadoCasoViewSet(viewsets.ReadOnlyModelViewSet):
     """Catálogo de estados de caso"""
@@ -165,12 +185,12 @@ class EstadoCasoViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Categorías'], description='Listar categorías'),
-    create=extend_schema(tags=['Categorías'], description='Crear una categoría'),
-    retrieve=extend_schema(tags=['Categorías'], description='Obtener una categoría'),
-    update=extend_schema(tags=['Categorías'], description='Actualizar una categoría'),
-    partial_update=extend_schema(tags=['Categorías'], description='Actualizar parcialmente una categoría'),
-    destroy=extend_schema(tags=['Categorías'], description='Eliminar una categoría'),
+    list=extend_schema(tags=['Categorías'], summary='Listar categorías', description='Obtiene la lista de categorías.'),
+    create=extend_schema(tags=['Categorías'], summary='Crear categoría', description='Crea una nueva categoría.'),
+    retrieve=extend_schema(tags=['Categorías'], summary='Obtener categoría', description='Obtiene el detalle de una categoría por ID.'),
+    update=extend_schema(tags=['Categorías'], summary='Actualizar categoría', description='Actualiza todos los campos de una categoría.'),
+    partial_update=extend_schema(tags=['Categorías'], summary='Actualizar parcialmente categoría', description='Actualiza algunos campos de una categoría.'),
+    destroy=extend_schema(tags=['Categorías'], summary='Eliminar categoría', description='Elimina una categoría.'),
 )
 class CategoriaViewSet(viewsets.ModelViewSet):
     """Gestión de categorías de casos"""
@@ -180,12 +200,12 @@ class CategoriaViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Casos'], description='Listar relaciones caso-categoría'),
-    create=extend_schema(tags=['Casos'], description='Asignar categoría a caso'),
-    retrieve=extend_schema(tags=['Casos'], description='Obtener relación caso-categoría'),
-    update=extend_schema(tags=['Casos'], description='Actualizar relación caso-categoría'),
-    partial_update=extend_schema(tags=['Casos'], description='Actualizar parcialmente relación'),
-    destroy=extend_schema(tags=['Casos'], description='Eliminar relación caso-categoría'),
+    list=extend_schema(tags=['Casos'], summary='Listar relaciones caso-categoría', description='Obtiene relaciones entre casos y categorías.'),
+    create=extend_schema(tags=['Casos'], summary='Asignar categoría a caso', description='Crea una relación caso-categoría.'),
+    retrieve=extend_schema(tags=['Casos'], summary='Obtener relación caso-categoría', description='Obtiene una relación por ID.'),
+    update=extend_schema(tags=['Casos'], summary='Actualizar relación caso-categoría', description='Actualiza una relación completa.'),
+    partial_update=extend_schema(tags=['Casos'], summary='Actualizar parcialmente relación', description='Actualiza algunos campos de una relación.'),
+    destroy=extend_schema(tags=['Casos'], summary='Eliminar relación caso-categoría', description='Elimina una relación caso-categoría.'),
 )
 class CasoCategoriaViewSet(viewsets.ModelViewSet):
     """Relación entre casos y categorías"""
@@ -199,12 +219,12 @@ class CasoCategoriaViewSet(viewsets.ModelViewSet):
 # ============================================
 
 @extend_schema_view(
-    list=extend_schema(tags=['Donaciones'], description='Listar donaciones'),
-    create=extend_schema(tags=['Donaciones'], description='Crear una donación'),
-    retrieve=extend_schema(tags=['Donaciones'], description='Obtener detalles de donación'),
-    update=extend_schema(tags=['Donaciones'], description='Actualizar donación'),
-    partial_update=extend_schema(tags=['Donaciones'], description='Actualizar parcialmente donación'),
-    destroy=extend_schema(tags=['Donaciones'], description='Eliminar donación'),
+    list=extend_schema(tags=['Donaciones'], summary='Listar donaciones', description='Obtiene la lista de donaciones.'),
+    create=extend_schema(tags=['Donaciones'], summary='Crear donación', description='Registra una nueva donación.'),
+    retrieve=extend_schema(tags=['Donaciones'], summary='Obtener donación', description='Obtiene el detalle de una donación por ID.'),
+    update=extend_schema(tags=['Donaciones'], summary='Actualizar donación', description='Actualiza una donación completa.'),
+    partial_update=extend_schema(tags=['Donaciones'], summary='Actualizar parcialmente donación', description='Actualiza algunos campos de una donación.'),
+    destroy=extend_schema(tags=['Donaciones'], summary='Eliminar donación', description='Elimina una donación.'),
 )
 class DonacionViewSet(viewsets.ModelViewSet):
     """Gestión de donaciones"""
@@ -213,7 +233,11 @@ class DonacionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     ordering = ['-fecha_compromiso']
 
-    @extend_schema(tags=['Donaciones'], description='Obtener donaciones del usuario autenticado')
+    @extend_schema(
+        tags=['Donaciones'],
+        summary='Mis donaciones',
+        description='Obtiene las donaciones del usuario autenticado.'
+    )
     @action(detail=False, methods=['get'])
     def mis_donaciones(self, request):
         donaciones = self.get_queryset().filter(id_donador=request.user)
@@ -226,12 +250,12 @@ class DonacionViewSet(viewsets.ModelViewSet):
 # ============================================
 
 @extend_schema_view(
-    list=extend_schema(tags=['Evidencias'], description='Listar evidencias'),
-    create=extend_schema(tags=['Evidencias'], description='Crear evidencia'),
-    retrieve=extend_schema(tags=['Evidencias'], description='Obtener evidencia'),
-    update=extend_schema(tags=['Evidencias'], description='Actualizar evidencia'),
-    partial_update=extend_schema(tags=['Evidencias'], description='Actualizar parcialmente evidencia'),
-    destroy=extend_schema(tags=['Evidencias'], description='Eliminar evidencia'),
+    list=extend_schema(tags=['Evidencias'], summary='Listar evidencias', description='Obtiene evidencias multimedia asociadas a casos.'),
+    create=extend_schema(tags=['Evidencias'], summary='Crear evidencia', description='Sube o registra una nueva evidencia.'),
+    retrieve=extend_schema(tags=['Evidencias'], summary='Obtener evidencia', description='Obtiene el detalle de una evidencia por ID.'),
+    update=extend_schema(tags=['Evidencias'], summary='Actualizar evidencia', description='Actualiza una evidencia completa.'),
+    partial_update=extend_schema(tags=['Evidencias'], summary='Actualizar parcialmente evidencia', description='Actualiza algunos campos de una evidencia.'),
+    destroy=extend_schema(tags=['Evidencias'], summary='Eliminar evidencia', description='Elimina una evidencia.'),
 )
 class EvidenciaViewSet(viewsets.ModelViewSet):
     """Gestión de evidencias multimedia"""
@@ -245,12 +269,12 @@ class EvidenciaViewSet(viewsets.ModelViewSet):
 # ============================================
 
 @extend_schema_view(
-    list=extend_schema(tags=['Mensajería'], description='Listar conversaciones'),
-    create=extend_schema(tags=['Mensajería'], description='Crear conversación'),
-    retrieve=extend_schema(tags=['Mensajería'], description='Obtener conversación'),
-    update=extend_schema(tags=['Mensajería'], description='Actualizar conversación'),
-    partial_update=extend_schema(tags=['Mensajería'], description='Actualizar parcialmente conversación'),
-    destroy=extend_schema(tags=['Mensajería'], description='Eliminar conversación'),
+    list=extend_schema(tags=['Mensajería'], summary='Listar conversaciones', description='Obtiene conversaciones del sistema.'),
+    create=extend_schema(tags=['Mensajería'], summary='Crear conversación', description='Crea una nueva conversación.'),
+    retrieve=extend_schema(tags=['Mensajería'], summary='Obtener conversación', description='Obtiene el detalle de una conversación por ID.'),
+    update=extend_schema(tags=['Mensajería'], summary='Actualizar conversación', description='Actualiza una conversación completa.'),
+    partial_update=extend_schema(tags=['Mensajería'], summary='Actualizar parcialmente conversación', description='Actualiza algunos campos de una conversación.'),
+    destroy=extend_schema(tags=['Mensajería'], summary='Eliminar conversación', description='Elimina una conversación.'),
 )
 class ConversacionViewSet(viewsets.ModelViewSet):
     """Gestión de conversaciones"""
@@ -260,12 +284,12 @@ class ConversacionViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Mensajería'], description='Listar mensajes'),
-    create=extend_schema(tags=['Mensajería'], description='Enviar mensaje'),
-    retrieve=extend_schema(tags=['Mensajería'], description='Obtener mensaje'),
-    update=extend_schema(tags=['Mensajería'], description='Actualizar mensaje'),
-    partial_update=extend_schema(tags=['Mensajería'], description='Actualizar parcialmente mensaje'),
-    destroy=extend_schema(tags=['Mensajería'], description='Eliminar mensaje'),
+    list=extend_schema(tags=['Mensajería'], summary='Listar mensajes', description='Obtiene los mensajes disponibles.'),
+    create=extend_schema(tags=['Mensajería'], summary='Enviar mensaje', description='Crea un nuevo mensaje.'),
+    retrieve=extend_schema(tags=['Mensajería'], summary='Obtener mensaje', description='Obtiene el detalle de un mensaje por ID.'),
+    update=extend_schema(tags=['Mensajería'], summary='Actualizar mensaje', description='Actualiza un mensaje completo.'),
+    partial_update=extend_schema(tags=['Mensajería'], summary='Actualizar parcialmente mensaje', description='Actualiza algunos campos de un mensaje.'),
+    destroy=extend_schema(tags=['Mensajería'], summary='Eliminar mensaje', description='Elimina un mensaje.'),
 )
 class MensajeViewSet(viewsets.ModelViewSet):
     """Gestión de mensajes"""
@@ -276,8 +300,8 @@ class MensajeViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Catálogos'], description='Listar tipos de mensaje'),
-    retrieve=extend_schema(tags=['Catálogos'], description='Obtener tipo de mensaje'),
+    list=extend_schema(tags=['Catálogos'], summary='Listar tipos de mensaje', description='Obtiene tipos de mensaje disponibles.'),
+    retrieve=extend_schema(tags=['Catálogos'], summary='Obtener tipo de mensaje', description='Obtiene el detalle de un tipo de mensaje por ID.'),
 )
 class TipoMensajeViewSet(viewsets.ReadOnlyModelViewSet):
     """Catálogo de tipos de mensaje"""
@@ -291,12 +315,12 @@ class TipoMensajeViewSet(viewsets.ReadOnlyModelViewSet):
 # ============================================
 
 @extend_schema_view(
-    list=extend_schema(tags=['Moderación'], description='Listar reportes'),
-    create=extend_schema(tags=['Moderación'], description='Crear reporte'),
-    retrieve=extend_schema(tags=['Moderación'], description='Obtener reporte'),
-    update=extend_schema(tags=['Moderación'], description='Actualizar reporte'),
-    partial_update=extend_schema(tags=['Moderación'], description='Actualizar parcialmente reporte'),
-    destroy=extend_schema(tags=['Moderación'], description='Eliminar reporte'),
+    list=extend_schema(tags=['Moderación'], summary='Listar reportes', description='Obtiene reportes de moderación.'),
+    create=extend_schema(tags=['Moderación'], summary='Crear reporte', description='Registra un nuevo reporte.'),
+    retrieve=extend_schema(tags=['Moderación'], summary='Obtener reporte', description='Obtiene el detalle de un reporte por ID.'),
+    update=extend_schema(tags=['Moderación'], summary='Actualizar reporte', description='Actualiza un reporte completo.'),
+    partial_update=extend_schema(tags=['Moderación'], summary='Actualizar parcialmente reporte', description='Actualiza algunos campos de un reporte.'),
+    destroy=extend_schema(tags=['Moderación'], summary='Eliminar reporte', description='Elimina un reporte.'),
 )
 class ReporteViewSet(viewsets.ModelViewSet):
     """Gestión de reportes"""
@@ -306,8 +330,8 @@ class ReporteViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Catálogos'], description='Listar estados de reporte'),
-    retrieve=extend_schema(tags=['Catálogos'], description='Obtener estado de reporte'),
+    list=extend_schema(tags=['Catálogos'], summary='Listar estados de reporte', description='Obtiene estados posibles de reporte.'),
+    retrieve=extend_schema(tags=['Catálogos'], summary='Obtener estado de reporte', description='Obtiene el detalle de un estado de reporte por ID.'),
 )
 class EstadoReporteViewSet(viewsets.ReadOnlyModelViewSet):
     """Catálogo de estados de reporte"""
@@ -317,12 +341,12 @@ class EstadoReporteViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Moderación'], description='Listar sanciones'),
-    create=extend_schema(tags=['Moderación'], description='Crear sanción'),
-    retrieve=extend_schema(tags=['Moderación'], description='Obtener sanción'),
-    update=extend_schema(tags=['Moderación'], description='Actualizar sanción'),
-    partial_update=extend_schema(tags=['Moderación'], description='Actualizar parcialmente sanción'),
-    destroy=extend_schema(tags=['Moderación'], description='Eliminar sanción'),
+    list=extend_schema(tags=['Moderación'], summary='Listar sanciones', description='Obtiene sanciones registradas.'),
+    create=extend_schema(tags=['Moderación'], summary='Crear sanción', description='Registra una nueva sanción.'),
+    retrieve=extend_schema(tags=['Moderación'], summary='Obtener sanción', description='Obtiene el detalle de una sanción por ID.'),
+    update=extend_schema(tags=['Moderación'], summary='Actualizar sanción', description='Actualiza una sanción completa.'),
+    partial_update=extend_schema(tags=['Moderación'], summary='Actualizar parcialmente sanción', description='Actualiza algunos campos de una sanción.'),
+    destroy=extend_schema(tags=['Moderación'], summary='Eliminar sanción', description='Elimina una sanción.'),
 )
 class SancionViewSet(viewsets.ModelViewSet):
     """Gestión de sanciones"""
@@ -332,8 +356,8 @@ class SancionViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Catálogos'], description='Listar tipos de sanción'),
-    retrieve=extend_schema(tags=['Catálogos'], description='Obtener tipo de sanción'),
+    list=extend_schema(tags=['Catálogos'], summary='Listar tipos de sanción', description='Obtiene tipos de sanción disponibles.'),
+    retrieve=extend_schema(tags=['Catálogos'], summary='Obtener tipo de sanción', description='Obtiene el detalle de un tipo de sanción por ID.'),
 )
 class TipoSancionViewSet(viewsets.ReadOnlyModelViewSet):
     """Catálogo de tipos de sanción"""
@@ -347,12 +371,12 @@ class TipoSancionViewSet(viewsets.ReadOnlyModelViewSet):
 # ============================================
 
 @extend_schema_view(
-    list=extend_schema(tags=['OCR'], description='Listar documentos OCR'),
-    create=extend_schema(tags=['OCR'], description='Subir documento para OCR'),
-    retrieve=extend_schema(tags=['OCR'], description='Obtener documento OCR'),
-    update=extend_schema(tags=['OCR'], description='Actualizar documento OCR'),
-    partial_update=extend_schema(tags=['OCR'], description='Actualizar parcialmente documento OCR'),
-    destroy=extend_schema(tags=['OCR'], description='Eliminar documento OCR'),
+    list=extend_schema(tags=['OCR'], summary='Listar documentos OCR', description='Obtiene documentos enviados para OCR.'),
+    create=extend_schema(tags=['OCR'], summary='Crear documento OCR', description='Registra/sube un documento para procesamiento OCR.'),
+    retrieve=extend_schema(tags=['OCR'], summary='Obtener documento OCR', description='Obtiene el detalle de un documento OCR por ID.'),
+    update=extend_schema(tags=['OCR'], summary='Actualizar documento OCR', description='Actualiza un documento OCR completo.'),
+    partial_update=extend_schema(tags=['OCR'], summary='Actualizar parcialmente documento OCR', description='Actualiza algunos campos de un documento OCR.'),
+    destroy=extend_schema(tags=['OCR'], summary='Eliminar documento OCR', description='Elimina un documento OCR.'),
 )
 class DocumentoOCRViewSet(viewsets.ModelViewSet):
     """Gestión de documentos OCR"""
@@ -362,8 +386,8 @@ class DocumentoOCRViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Catálogos'], description='Listar estados OCR'),
-    retrieve=extend_schema(tags=['Catálogos'], description='Obtener estado OCR'),
+    list=extend_schema(tags=['Catálogos'], summary='Listar estados OCR', description='Obtiene estados posibles del flujo OCR.'),
+    retrieve=extend_schema(tags=['Catálogos'], summary='Obtener estado OCR', description='Obtiene el detalle de un estado OCR por ID.'),
 )
 class EstadoOCRViewSet(viewsets.ReadOnlyModelViewSet):
     """Catálogo de estados OCR"""
@@ -373,8 +397,8 @@ class EstadoOCRViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['OCR'], description='Listar logs OCR'),
-    retrieve=extend_schema(tags=['OCR'], description='Obtener log OCR'),
+    list=extend_schema(tags=['OCR'], summary='Listar logs OCR', description='Obtiene el historial de procesamiento OCR.'),
+    retrieve=extend_schema(tags=['OCR'], summary='Obtener log OCR', description='Obtiene el detalle de un registro de log OCR por ID.'),
 )
 class LogOCRViewSet(viewsets.ReadOnlyModelViewSet):
     """Historial de procesamiento OCR"""
