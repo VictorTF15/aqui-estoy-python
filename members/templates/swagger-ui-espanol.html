@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Aquí Estoy - Documentación API</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui.css">
+    <link rel="icon" type="image/png" href="https://favicon.swagger.io/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="https://favicon.swagger.io/favicon-16x16.png" sizes="16x16" />
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+        body {
+            margin: 0;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui-bundle.js" charset="UTF-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui-standalone-preset.js" charset="UTF-8"></script>
+    <script>
+        const ui = SwaggerUIBundle({
+            url: "{{ schema_url }}",
+            dom_id: '#swagger-ui',
+            deepLinking: true,
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset
+            ],
+            plugins: [
+                SwaggerUIBundle.plugins.DownloadUrl
+            ],
+            layout: "BaseLayout",
+            // CONFIGURAR IDIOMA AL ESPAÑOL
+            swaggerOptions: {
+                url: "{{ schema_url }}",
+                displayOperationId: false,
+            }
+        });
+
+        // INYECTAR TRADUCCIONES AL ESPAÑOL
+        document.addEventListener('DOMContentLoaded', function() {
+            const traducciones = {
+                // Títulos y encabezados
+                'Parameters': 'Parámetros',
+                'Parameter': 'Parámetro',
+                'Request body': 'Cuerpo de la solicitud',
+                'Responses': 'Respuestas',
+                'Response': 'Respuesta',
+                'Try it out': 'Probar',
+                'Execute': 'Ejecutar',
+                'Cancel': 'Cancelar',
+                'Clear': 'Limpiar',
+                'Response headers': 'Encabezados de respuesta',
+                'Server': 'Servidor',
+                'Servers': 'Servidores',
+                'Server variables': 'Variables del servidor',
+                'Authentication': 'Autenticación',
+                'Authorize': 'Autorizar',
+                'Close': 'Cerrar',
+                'Schema': 'Esquema',
+                'Example': 'Ejemplo',
+                'Examples': 'Ejemplos',
+                'Required': 'Requerido',
+                'Optional': 'Opcional',
+                'Deprecated': 'Obsoleto',
+                'Default': 'Por defecto',
+                'Name': 'Nombre',
+                'Type': 'Tipo',
+                'Description': 'Descripción',
+                'In': 'En',
+                'query': 'consulta',
+                'header': 'encabezado',
+                'path': 'ruta',
+                'cookie': 'cookie',
+                'body': 'cuerpo',
+                'formData': 'datos de formulario',
+                'No response body': 'Sin contenido en la respuesta',
+                'Response content type': 'Tipo de contenido de respuesta',
+                'Request content type': 'Tipo de contenido solicitado',
+                'Curl': 'Curl',
+                'Delete': 'Eliminar',
+                'Download': 'Descargar',
+                'Authorize using': 'Autorizar usando',
+                'Authorize': 'Autorizar',
+                'Logout': 'Cerrar sesión',
+                'Models': 'Modelos',
+                'Model Schema': 'Esquema del modelo',
+                'Show': 'Mostrar',
+                'Hide': 'Ocultar',
+                'Model': 'Modelo',
+                'Jump to Path': 'Ir a ruta',
+                'Jump to definition': 'Ir a definición',
+                'Copy to clipboard': 'Copiar al portapapeles',
+                'Request URL': 'URL de solicitud',
+                'Response body': 'Cuerpo de la respuesta',
+                'Search': 'Buscar',
+                'Filter by tag': 'Filtrar por etiqueta',
+                'Filter by operationId': 'Filtrar por operationId',
+                'Show operation filtering': 'Mostrar filtrado de operaciones',
+                'Expand operation': 'Expandir operación',
+                'Collapse operation': 'Contraer operación',
+                'Schemes': 'Esquemas',
+                'default': 'default',
+                'string': 'cadena',
+                'number': 'número',
+                'integer': 'entero',
+                'boolean': 'booleano',
+                'array': 'matriz',
+                'object': 'objeto',
+                'null': 'nulo',
+                'A unique integer value identifying this': 'Un valor entero único que identifica este',
+            };
+
+            function traducirElemento(elemento, traducciones) {
+                if (elemento.nodeType === Node.TEXT_NODE) {
+                    for (const [en, es] of Object.entries(traducciones)) {
+                        if (elemento.textContent.includes(en)) {
+                            elemento.textContent = elemento.textContent.replace(
+                                new RegExp(en, 'g'),
+                                es
+                            );
+                        }
+                    }
+                } else {
+                    elemento.childNodes.forEach(child => {
+                        traducirElemento(child, traducciones);
+                    });
+                }
+            }
+
+            // Traducir cuando carga Swagger
+            setTimeout(() => {
+                traducirElemento(document.body, traducciones);
+                
+                // Observer para traducir elementos nuevos dinámicamente
+                const observer = new MutationObserver(() => {
+                    traducirElemento(document.body, traducciones);
+                });
+
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true,
+                    characterData: false
+                });
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
