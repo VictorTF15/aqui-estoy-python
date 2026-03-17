@@ -377,6 +377,8 @@ class DocumentosOCR(models.Model):
     apellido_materno_extraido = models.CharField(max_length=100, null=True, blank=True)
     curp_extraida = models.CharField(max_length=18, null=True, blank=True)
     clave_electoral_extraida = models.CharField(max_length=18, null=True, blank=True)
+    cic_extraido = models.CharField(max_length=9, null=True, blank=True)
+    ocr_id_cr_extraido = models.CharField(max_length=13, null=True, blank=True)
     fecha_nacimiento_extraida = models.DateField(null=True, blank=True)
     sexo_extraido = models.CharField(max_length=1, null=True, blank=True)
     direccion_extraida = models.CharField(max_length=300, null=True, blank=True)
@@ -405,7 +407,7 @@ class DocumentosOCR(models.Model):
 
 
 class LogOCR(models.Model):
-    id_documento_ocr = models.ForeignKey(DocumentosOCR, on_delete=models.PROTECT, db_column='idDocumentoOCR')
+    id_documento_ocr = models.ForeignKey(DocumentosOCR, on_delete=models.CASCADE, db_column='idDocumentoOCR')
     estado_anterior = models.ForeignKey(EstadoOCR, on_delete=models.PROTECT, null=True, blank=True, related_name='logs_estado_anterior', db_column='estadoAnterior')
     estado_nuevo = models.ForeignKey(EstadoOCR, on_delete=models.PROTECT, related_name='logs_estado_nuevo', db_column='estadoNuevo')
     mensaje = models.TextField(null=True, blank=True)

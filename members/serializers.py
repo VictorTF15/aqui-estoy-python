@@ -16,46 +16,38 @@ from .models import (
 # ============================================
 
 class CustomTokenObtainPairSerializer(serializers.Serializer):
-    """Serializer personalizado para autenticación con correo electrónico"""
+    """Serializador de inicio de sesión con correo + contraseña."""
     correo = serializers.EmailField(required=True)
-    password = serializers.CharField(required=False, write_only=True, style={'input_type': 'password'})
     contrasena = serializers.CharField(required=False, write_only=True, style={'input_type': 'password'})
-    
+    password = serializers.CharField(required=False, write_only=True, style={'input_type': 'password'})  # compatibilidad
+
     class Meta:
         ref_name = 'Login'
-    
+
     def validate(self, attrs):
         correo = attrs.get('correo')
-        # Aceptar tanto 'password' como 'contrasena'
-        password = attrs.get('password') or attrs.get('contrasena')
-        
-        if not password:
-            raise serializers.ValidationError({'password': 'Este campo es requerido'})
-        
-        # Buscar usuario por correo
+        clave = attrs.get('contrasena') or attrs.get('password')
+
+        if not clave:
+            raise serializers.ValidationError({'contrasena': 'Este campo es requerido.'})
+
         try:
             usuario = Usuarios.objects.get(correo=correo)
         except Usuarios.DoesNotExist:
-            raise serializers.ValidationError({'detail': 'Credenciales incorrectas'})
-        
-        # Verificar si está activo
+            raise serializers.ValidationError({'detail': 'Credenciales incorrectas.'})
+
         if not usuario.esta_activo:
-            raise serializers.ValidationError({'detail': 'Esta cuenta está inactiva'})
-        
-        # Verificar contraseña
-        if not usuario.check_password(password):
-            raise serializers.ValidationError({'detail': 'Credenciales incorrectas'})
-        
-        # Generar tokens usando RefreshToken
-        from rest_framework_simplejwt.tokens import RefreshToken
+            raise serializers.ValidationError({'detail': 'La cuenta está inactiva.'})
+
+        if not usuario.check_password(clave):
+            raise serializers.ValidationError({'detail': 'Credenciales incorrectas.'})
+
         refresh = RefreshToken.for_user(usuario)
-        
-        # Agregar claims personalizados
         refresh['correo'] = usuario.correo
         refresh['nombres'] = usuario.nombres
         refresh['tipo_usuario'] = usuario.id_tipo_usuario.nombre if usuario.id_tipo_usuario else None
         refresh['user_id'] = usuario.id
-        
+
         return {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
@@ -377,18 +369,46 @@ class SancionSerializer(serializers.ModelSerializer):
 class DocumentoOCRSerializer(serializers.ModelSerializer):
     usuario_nombre = serializers.CharField(source='id_usuario.nombres', read_only=True)
     estado = EstadoOCRSerializer(source='id_estado', read_only=True)
+    validado_por_nombre = serializers.CharField(source='validado_por.nombres', read_only=True)
     
     class Meta:
         model = DocumentosOCR
         fields = [
-            'id', 'tipo_documento', 'ruta_imagen',
+            'id', 'tipo_documento', 'id_relacionado', 'ruta_imagen',
+            'intentos_procesamiento',
             'nombre_extraido', 'apellido_paterno_extraido', 'apellido_materno_extraido',
-            'curp_extraida', 'confianza_ocr', 'datos_validados',
-            'usuario_nombre', 'estado', 'id_usuario', 'id_estado',
+            'curp_extraida', 'clave_electoral_extraida', 'cic_extraido', 'ocr_id_cr_extraido',
+            'fecha_nacimiento_extraida', 'sexo_extraido', 'direccion_extraida', 'vigencia_extraida',
+            'confianza_ocr', 'datos_validados', 'fecha_validacion', 'notas_validacion',
+            'respuesta_ocr_completa',
+            'usuario_nombre', 'estado', 'validado_por_nombre',
+            'id_usuario', 'id_estado', 'validado_por',
             'fecha_subida', 'fecha_procesamiento'
         ]
         read_only_fields = ['id', 'fecha_subida', 'fecha_procesamiento']
         ref_name = 'DocumentoOCR'
+
+
+class DocumentoOCRUploadSerializer(serializers.Serializer):
+    archivo_frontal = serializers.ImageField(required=False)
+    archivo_trasera = serializers.ImageField(required=False)
+    id_relacionado = serializers.IntegerField(required=False, allow_null=True)
+
+    def validate(self, attrs):
+        if not attrs.get('archivo_frontal') and not attrs.get('archivo_trasera'):
+            raise serializers.ValidationError('Debes enviar al menos archivo_frontal o archivo_trasera.')
+        return attrs
+
+    class Meta:
+        ref_name = 'DocumentoOCRUpload'
+
+
+class DocumentoOCRProcessResponseSerializer(serializers.Serializer):
+    documentos = DocumentoOCRSerializer(many=True)
+    resumen = serializers.DictField()
+
+    class Meta:
+        ref_name = 'DocumentoOCRProcessResponse'
 
 
 class LogOCRSerializer(serializers.ModelSerializer):
