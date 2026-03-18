@@ -252,7 +252,6 @@ class Evidencias(models.Model):
 class Donaciones(models.Model):
     id_donador = models.ForeignKey(Usuarios, on_delete=models.PROTECT, related_name='donaciones_realizadas', db_column='idDonador')
     id_caso = models.ForeignKey(Casos, on_delete=models.PROTECT, db_column='idCaso')
-    id_tipo_donacion = models.IntegerField(db_column='idTipoDonacion', null=True, blank=True)
     cantidad_donacion = models.DecimalField(max_digits=10, decimal_places=2, db_column='cantidadDonacion', null=True, blank=True)
     descripcion_donacion = models.TextField(db_column='descripcionDonacion', null=True, blank=True)
     id_categoria = models.ForeignKey(Categorias, on_delete=models.PROTECT, db_column='idCategoria', null=True, blank=True)    

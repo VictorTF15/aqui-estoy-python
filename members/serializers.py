@@ -18,18 +18,17 @@ from .models import (
 class CustomTokenObtainPairSerializer(serializers.Serializer):
     """Serializador de inicio de sesión con correo + contraseña."""
     correo = serializers.EmailField(required=True)
-    contrasena = serializers.CharField(required=False, write_only=True, style={'input_type': 'password'})
-    password = serializers.CharField(required=False, write_only=True, style={'input_type': 'password'})  # compatibilidad
+    password = serializers.CharField(required=True, write_only=True, style={'input_type': 'password'})
 
     class Meta:
         ref_name = 'Login'
 
     def validate(self, attrs):
         correo = attrs.get('correo')
-        clave = attrs.get('contrasena') or attrs.get('password')
+        clave = attrs.get('password')
 
-        if not clave:     
-            raise serializers.ValidationError({'contrasena': 'Este campo es requerido.'})
+        if not clave:
+            raise serializers.ValidationError({'password': 'Este campo es requerido.'})
 
         try:
             usuario = Usuarios.objects.get(correo=correo)
@@ -266,7 +265,7 @@ class DonacionSerializer(serializers.ModelSerializer):
             'donador', 'caso_titulo', 'id_donador', 'id_caso',
             'fecha_compromiso', 'fecha_donacion',
             'mensaje_donador',
-            'id_tipo_donacion', 'cantidad_donacion', 'descripcion_donacion', 
+            'cantidad_donacion', 'descripcion_donacion', 
             'id_categoria', 'categoria'
         ]
         read_only_fields = ['id']
