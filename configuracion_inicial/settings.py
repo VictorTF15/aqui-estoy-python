@@ -5,14 +5,16 @@ Django settings for configuracion_inicial project.
 from pathlib import Path
 import os
 import dj_database_url
+from corsheaders.defaults import default_headers
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
-DEBUG = True
-
-ALLOWED_HOSTS = []
+# Seguridad y Hosts
+DEBUG = os.environ.get('DEBUG', 'True') == 'True' 
+ALLOWED_HOSTS = ['.vercel.app', 'localhost', '127.0.0.1']
 CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app']
 
 INSTALLED_APPS = [
@@ -43,7 +45,6 @@ MIDDLEWARE = [
     'django.middleware.locale.LocaleMiddleware',
 ]
 
-
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
@@ -52,21 +53,12 @@ DATABASES = {
     )
 }
 
-
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-
 AUTH_USER_MODEL = 'members.Usuarios'
 
+# Archivos Estáticos y Media
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-
 STATICFILES_DIRS = [
     BASE_DIR / 'members' / 'static',
 ]
@@ -83,6 +75,7 @@ LOGIN_URL = 'members:login'
 LOGIN_REDIRECT_URL = 'members:feed'
 LOGOUT_REDIRECT_URL = 'members:login'
 
+# Configuración de Django Rest Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -95,6 +88,21 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
+# Configuración de JWT
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+}
+
+# Configuración de Swagger / Spectacular
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Aquí Estoy - API REST',
     'DESCRIPTION': 'API para gestión de casos sociales, donaciones y usuarios',
@@ -126,31 +134,19 @@ SPECTACULAR_SETTINGS = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:5173",  # Por si usas Vite en React
+    "http://127.0.0.1:5173",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    # "https://tu-frontend-en-vercel.vercel.app", # Descomenta cuando subas el frontend
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ALL_ORIGINS = True
 
-DEBUG = os.environ.get('DEBUG', 'True') == 'True' 
-ALLOWED_HOSTS = ['.vercel.app', 'localhost', '127.0.0.1']
-
-
-from datetime import timedelta
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': True,
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-}
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'content-type',
+    'authorization',
+]
 
 TEMPLATES = [
     {
