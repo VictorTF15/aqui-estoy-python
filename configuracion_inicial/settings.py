@@ -13,6 +13,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = []
+CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -130,7 +131,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-
+CORS_ALLOWED_ALL_ORIGINS = True
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True' 
 ALLOWED_HOSTS = ['.vercel.app', 'localhost', '127.0.0.1']
