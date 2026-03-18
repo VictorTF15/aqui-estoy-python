@@ -252,7 +252,10 @@ class Evidencias(models.Model):
 class Donaciones(models.Model):
     id_donador = models.ForeignKey(Usuarios, on_delete=models.PROTECT, related_name='donaciones_realizadas', db_column='idDonador')
     id_caso = models.ForeignKey(Casos, on_delete=models.PROTECT, db_column='idCaso')
-    referencia_pago = models.CharField(max_length=100, null=True, blank=True)
+    id_tipo_donacion = models.IntegerField(db_column='idTipoDonacion', null=True, blank=True)
+    cantidad_donacion = models.DecimalField(max_digits=10, decimal_places=2, db_column='cantidadDonacion', null=True, blank=True)
+    descripcion_donacion = models.TextField(db_column='descripcionDonacion', null=True, blank=True)
+    id_categoria = models.ForeignKey(Categorias, on_delete=models.PROTECT, db_column='idCategoria', null=True, blank=True)    
     fecha_compromiso = models.DateTimeField(default=timezone.now)
     fecha_donacion = models.DateTimeField(null=True, blank=True)
     estado_donacion = models.CharField(max_length=50, default='Pendiente')
@@ -265,6 +268,7 @@ class Donaciones(models.Model):
             models.Index(fields=['id_caso']),
             models.Index(fields=['id_donador']),
             models.Index(fields=['fecha_compromiso']),
+            models.Index(fields=['id_categoria']),
         ]
 
     def __str__(self):
