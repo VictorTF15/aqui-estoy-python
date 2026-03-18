@@ -8,7 +8,7 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-q99h-^75b%!)f$lx5i_r(xordl(+o4s1&y*if$2l27il+-n=ys'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 DEBUG = True
 
@@ -45,7 +45,7 @@ MIDDLEWARE = [
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres:VictorToxfl2026@db.omuwyuldhqqtvuxivvgl.supabase.co:5432/postgres',
+        default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,
         ssl_require=True
     )
