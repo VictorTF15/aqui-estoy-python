@@ -45,7 +45,7 @@ MIDDLEWARE = [
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
+        default='postgresql://postgres:VictorToxfl2026@db.omuwyuldhqqtvuxivvgl.supabase.co:5432/postgres',
         conn_max_age=600,
         ssl_require=True
     )
