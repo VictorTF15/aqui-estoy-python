@@ -77,10 +77,20 @@ class CustomTokenObtainPairView(APIView):
 class UsuarioViewSet(viewsets.ModelViewSet):
     """Gestión de usuarios del sistema"""
     queryset = Usuarios.objects.all()
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated] # Se manejará dinámicamente
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['nombres', 'apellido_paterno', 'apellido_materno', 'correo']
     ordering = ['-fecha_registro']
+
+    def get_permissions(self):
+        """
+        Asigna permisos basados en la acción.
+        - `create` (registro) es público.
+        - Otras acciones requieren autenticación.
+        """
+        if self.action == 'create':
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:

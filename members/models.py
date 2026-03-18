@@ -252,13 +252,10 @@ class Evidencias(models.Model):
 class Donaciones(models.Model):
     id_donador = models.ForeignKey(Usuarios, on_delete=models.PROTECT, related_name='donaciones_realizadas', db_column='idDonador')
     id_caso = models.ForeignKey(Casos, on_delete=models.PROTECT, db_column='idCaso')
-    monto = models.DecimalField(max_digits=10, decimal_places=2)
-    metodo_pago = models.CharField(max_length=50, null=True, blank=True)
     referencia_pago = models.CharField(max_length=100, null=True, blank=True)
     fecha_compromiso = models.DateTimeField(default=timezone.now)
-    fecha_pago = models.DateTimeField(null=True, blank=True)
+    fecha_donacion = models.DateTimeField(null=True, blank=True)
     estado_donacion = models.CharField(max_length=50, default='Pendiente')
-    es_anonima = models.BooleanField(default=False)
     mensaje_donador = models.TextField(null=True, blank=True)
 
     class Meta:
@@ -271,7 +268,7 @@ class Donaciones(models.Model):
         ]
 
     def __str__(self):
-        return f"Donación de {self.monto} al caso {self.id_caso}"
+        return f"Donación al caso {self.id_caso}"
 
 
 class Conversaciones(models.Model):

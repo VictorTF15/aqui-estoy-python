@@ -28,7 +28,7 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
         correo = attrs.get('correo')
         clave = attrs.get('contrasena') or attrs.get('password')
 
-        if not clave:
+        if not clave:     
             raise serializers.ValidationError({'contrasena': 'Este campo es requerido.'})
 
         try:
@@ -261,9 +261,9 @@ class DonacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Donaciones
         fields = [
-            'id', 'monto', 'estado_donacion', 'metodo_pago',
+            'id', 'estado_donacion',
             'donador', 'caso_titulo', 'id_donador', 'id_caso',
-            'fecha_compromiso', 'fecha_pago', 'es_anonima',
+            'fecha_compromiso', 'fecha_donacion',
             'mensaje_donador'
         ]
         read_only_fields = ['id']
