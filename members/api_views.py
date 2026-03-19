@@ -11,10 +11,8 @@ from django.utils import timezone
 from django.db import transaction
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse
 import os
-import re
-import time
-import boto3
-from decouple import config
+from .services import UsuarioService, DocumentoOCRService
+from .selectors import CasoSelector, DonacionSelector
 
 from .models import (
     Usuarios, TipoUsuario, Casos, EstadoCaso, Categorias,
@@ -115,15 +113,15 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def cambiar_password(self, request, pk=None):
         usuario = self.get_object()
-        password_actual = request.data.get('password_actual')
-        password_nueva = request.data.get('password_nueva')
-        
-        if not usuario.check_password(password_actual):
-            return Response({'error': 'Contraseña incorrecta'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        usuario.contrasena = make_password(password_nueva)
-        usuario.save()
-        return Response({'message': 'Contraseña actualizada'})
+        try:
+            UsuarioService.cambiar_password(
+                usuario=usuario,
+                password_actual=request.data.get('password_actual'),
+                password_nueva=request.data.get('password_nueva')
+            )
+            return Response({'message': 'Contraseña actualizada'})
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @extend_schema_view(
@@ -169,15 +167,7 @@ class CasoViewSet(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=['get'])
     def mapa(self, request):
-        casos = self.get_queryset().filter(esta_abierto=True)
-        data = [{
-            'id': caso.id,
-            'titulo': caso.titulo,
-            'latitud': float(caso.latitud) if caso.latitud else None,
-            'longitud': float(caso.longitud) if caso.longitud else None,
-            'prioridad': caso.prioridad,
-        } for caso in casos if caso.latitud and caso.longitud]
-        return Response(data)
+        return Response(CasoSelector.get_casos_mapa())
 
     @extend_schema(
         tags=['Casos'],
@@ -186,11 +176,7 @@ class CasoViewSet(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=['get'])
     def estadisticas(self, request):
-        return Response({
-            'total': Casos.objects.count(),
-            'abiertos': Casos.objects.filter(esta_abierto=True).count(),
-            'cerrados': Casos.objects.filter(esta_abierto=False).count(),
-        })
+        return Response(CasoSelector.get_estadisticas())
 
 
 @extend_schema_view(
@@ -256,7 +242,7 @@ class DonacionViewSet(viewsets.ModelViewSet):
     @extend_schema(tags=['Donaciones'], description='Obtener donaciones del usuario autenticado')
     @action(detail=False, methods=['get'])
     def mis_donaciones(self, request):
-        donaciones = self.get_queryset().filter(id_donador=request.user)
+        donaciones = DonacionSelector.get_donaciones_por_usuario(request.user.id)
         serializer = self.get_serializer(donaciones, many=True)
         return Response(serializer.data)
 
@@ -400,128 +386,6 @@ class DocumentoOCRViewSet(viewsets.ModelViewSet):
     serializer_class = DocumentoOCRSerializer
     permission_classes = [IsAuthenticated]
 
-    _CURP_REGEX = re.compile(r'[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z\d]\d')
-    _CLAVE_ELECTOR_REGEX = re.compile(r'[A-Z]{6}\d{8}[HM]\d{3}')
-    _CIC_REGEX = re.compile(r'IDMEX\s*(\d{9})', re.IGNORECASE)
-    _CIC_FALLBACK_REGEX = re.compile(r'\b\d{9}\b')
-    _OCR_ID_CR_REGEX = re.compile(r'\b\d{12,13}\b')
-    _FECHA_NAC_REGEX = re.compile(r'\b(\d{2}[/-]\d{2}[/-]\d{4})\b')
-    _SEXO_REGEX = re.compile(r'\b(H|M)\b')
-    _VIGENCIA_REGEX = re.compile(r'\b(\d{4})\s*[–\-]\s*(\d{4})\b')
-    
-
-    def _get_rekognition_client(self):
-        AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
-        AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
-        AWS_REGION = "us-east-1"
-        return boto3.client(
-            'rekognition',
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-            region_name=AWS_REGION
-        )
-
-    def _get_estado_por_nombre(self, nombre):
-        return EstadoOCR.objects.get(nombre__iexact=nombre)
-
-    def _extraer_nombre_apellidos(self, texto):
-        lineas = [linea.strip() for linea in texto.split(' ') if linea.strip()]
-        candidatos = [p for p in lineas if p.isalpha() and len(p) > 2]
-        if not candidatos:
-            return None, None, None
-        nombre = candidatos[0] if len(candidatos) >= 1 else None
-        apellido_paterno = candidatos[1] if len(candidatos) >= 2 else None
-        apellido_materno = candidatos[2] if len(candidatos) >= 3 else None
-        return nombre, apellido_paterno, apellido_materno
-
-    def _extraer_datos_ocr(self, imagen_bytes):
-        start_time = time.perf_counter()
-        client = self._get_rekognition_client()
-        response = client.detect_text(Image={'Bytes': imagen_bytes})
-        detecciones = response.get('TextDetections', [])
-        lineas = [d.get('DetectedText', '') for d in detecciones if d.get('Type') == 'LINE']
-        texto_detectado = ' '.join(lineas)
-
-        nombre, apellido_paterno, apellido_materno = self._extraer_nombre_apellidos(texto_detectado)
-        curp_match = self._CURP_REGEX.search(texto_detectado)
-        clave_match = self._CLAVE_ELECTOR_REGEX.search(texto_detectado)
-        cic_match = self._CIC_REGEX.search(texto_detectado)
-        cic_extraido = None
-        if cic_match:
-            cic_extraido = cic_match.group(1)
-        else:
-            cic_fallback_match = self._CIC_FALLBACK_REGEX.search(texto_detectado)
-            if cic_fallback_match:
-                cic_extraido = cic_fallback_match.group(0)
-        ocr_id_cr_match = self._OCR_ID_CR_REGEX.search(texto_detectado)
-        fecha_nac_match = self._FECHA_NAC_REGEX.search(texto_detectado)
-        sexo_match = self._SEXO_REGEX.search(texto_detectado)
-        vigencia_match = self._VIGENCIA_REGEX.search(texto_detectado)
-
-        confidencias_lineas = [d.get('Confidence') for d in detecciones if d.get('Type') == 'LINE' and d.get('Confidence') is not None]
-        promedio_confianza = round(sum(confidencias_lineas) / len(confidencias_lineas), 2) if confidencias_lineas else None
-        elapsed_ms = int((time.perf_counter() - start_time) * 1000)
-
-        fecha_nacimiento = None
-        if fecha_nac_match:
-            fecha_nacimiento = timezone.datetime.strptime(fecha_nac_match.group(1).replace('-', '/'), '%d/%m/%Y').date()
-
-        return {
-            'nombre_extraido': nombre,
-            'apellido_paterno_extraido': apellido_paterno,
-            'apellido_materno_extraido': apellido_materno,
-            'curp_extraida': curp_match.group(0) if curp_match else None,
-            'clave_electoral_extraida': clave_match.group(0) if clave_match else None,
-            'cic_extraido': cic_extraido,
-            'ocr_id_cr_extraido': ocr_id_cr_match.group(0) if ocr_id_cr_match else None,
-            'fecha_nacimiento_extraida': fecha_nacimiento,
-            'sexo_extraido': sexo_match.group(1) if sexo_match else None,
-            'vigencia_extraida': f"{vigencia_match.group(1)}-{vigencia_match.group(2)}" if vigencia_match else None,
-            'confianza_ocr': promedio_confianza,
-            'respuesta_ocr_completa': {'texto_detectado': texto_detectado},
-            'texto_detectado': texto_detectado,
-            'detecciones': len(detecciones),
-            'tiempo_procesamiento_ms': elapsed_ms,
-        }
-
-    def _validar_campos_importantes(self, tipo_documento, datos_ocr):
-        faltantes = []
-        if tipo_documento == 'INE_FRONTAL':
-            if not datos_ocr.get('curp_extraida'):
-                faltantes.append('curp_extraida')
-            if not datos_ocr.get('clave_electoral_extraida'):
-                faltantes.append('clave_electoral_extraida')
-        elif tipo_documento == 'INE_TRASERA':
-            if not datos_ocr.get('cic_extraido'):
-                faltantes.append('cic_extraido')
-            if not datos_ocr.get('ocr_id_cr_extraido'):
-                faltantes.append('ocr_id_cr_extraido')
-        return faltantes
-
-    def _buscar_duplicados(self, datos_ocr):
-        duplicados = []
-        validaciones = [
-            ('curp_extraida', 'CURP'),
-            ('cic_extraido', 'CIC'),
-            ('ocr_id_cr_extraido', 'OCR_ID_CR'),
-            ('clave_electoral_extraida', 'CLAVE_ELECTORAL'),
-        ]
-        for field_name, label in validaciones:
-            valor = datos_ocr.get(field_name)
-            if valor and DocumentosOCR.objects.filter(**{field_name: valor}).exists():
-                duplicados.append({'campo': label, 'valor': valor})
-        return duplicados
-
-    def _crear_log(self, documento, estado_anterior, estado_nuevo, mensaje=None, error_detalle=None, tiempo_ms=None):
-        LogOCR.objects.create(
-            id_documento_ocr=documento,
-            estado_anterior=estado_anterior,
-            estado_nuevo=estado_nuevo,
-            mensaje=mensaje,
-            error_detalle=error_detalle,
-            tiempo_procesamiento_ms=tiempo_ms
-        )
-
     @extend_schema(
         tags=['OCR'],
         summary='Subir y procesar documento OCR',
@@ -541,151 +405,40 @@ class DocumentoOCRViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
-        archivo_frontal = data.get('archivo_frontal')
-        archivo_trasera = data.get('archivo_trasera')
-        id_relacionado = data.get('id_relacionado')
-
-        estado_completado = self._get_estado_por_nombre('Completado')
-
         archivos_a_procesar = []
-        if archivo_frontal:
-            archivos_a_procesar.append(('INE_FRONTAL', archivo_frontal))
-        if archivo_trasera:
-            archivos_a_procesar.append(('INE_TRASERA', archivo_trasera))
+        if data.get('archivo_frontal'):
+            archivos_a_procesar.append(('INE_FRONTAL', data.get('archivo_frontal')))
+        if data.get('archivo_trasera'):
+            archivos_a_procesar.append(('INE_TRASERA', data.get('archivo_trasera')))
 
-        analisis = []
-        errores_campos = []
-        duplicados = []
+        try:
+            resultado = DocumentoOCRService.procesar_archivos(
+                usuario=request.user,
+                archivos_a_procesar=archivos_a_procesar,
+                id_relacionado=data.get('id_relacionado')
+            )
+        except ValueError as e:
+            return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        for tipo_doc_actual, archivo_actual in archivos_a_procesar:
-            archivo_actual.seek(0)
-            imagen_bytes = archivo_actual.read()
-            try:
-                datos_ocr = self._extraer_datos_ocr(imagen_bytes)
-            except Exception as exc:
+        if not resultado.get('ok'):
+            if resultado.get('errores_campos'):
                 return Response(
-                    {
-                        'detail': 'Error al procesar OCR.',
-                        'tipo_documento': tipo_doc_actual,
-                        'error': str(exc),
-                    },
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    {'detail': 'No se reconocieron campos importantes del INE. No se guardó información.', 'errores_campos': resultado['errores_campos']},
+                    status=422
+                )
+            if resultado.get('duplicados'):
+                return Response(
+                    {'detail': 'Se detectaron datos ya registrados.', 'duplicados': resultado['duplicados']},
+                    status=status.HTTP_409_CONFLICT
                 )
 
-            faltantes = self._validar_campos_importantes(tipo_doc_actual, datos_ocr)
-            if faltantes:
-                errores_campos.append({
-                    'tipo_documento': tipo_doc_actual,
-                    'campos_faltantes': faltantes,
-                    'texto_detectado': datos_ocr.get('texto_detectado', ''),
-                })
-
-            duplicados_en_doc = self._buscar_duplicados(datos_ocr)
-            for item in duplicados_en_doc:
-                duplicados.append({
-                    'tipo_documento': tipo_doc_actual,
-                    'campo': item['campo'],
-                    'valor': item['valor'],
-                })
-
-            analisis.append({
-                'tipo_documento': tipo_doc_actual,
-                'archivo': archivo_actual,
-                'datos_ocr': datos_ocr,
-            })
-
-        if errores_campos:
-            return Response(
-                {
-                    'detail': 'No se reconocieron campos importantes del INE. No se guardó información.',
-                    'errores_campos': errores_campos,
-                },
-                status=422
-            )
-
-        if duplicados:
-            return Response(
-                {
-                    'detail': 'Se detectaron datos ya registrados (CURP/CIC/OCR_ID_CR/CLAVE_ELECTORAL). No se guardó información.',
-                    'duplicados': duplicados,
-                },
-                status=status.HTTP_409_CONFLICT
-            )
-
-        resultados = []
-        doc_frontal_id = None
-        doc_trasera_id = None
-        with transaction.atomic():
-            for item in analisis:
-                tipo_doc_actual = item['tipo_documento']
-                archivo_actual = item['archivo']
-                datos_ocr = item['datos_ocr']
-
-                timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
-                nombre_archivo = default_storage.save(f'ocr/{timestamp}_{archivo_actual.name}', archivo_actual)
-
-                documento = DocumentosOCR.objects.create(
-                    id_usuario=request.user,
-                    tipo_documento=tipo_doc_actual,
-                    id_relacionado=id_relacionado,
-                    ruta_imagen=nombre_archivo,
-                    id_estado=estado_completado,
-                    fecha_procesamiento=timezone.now(),
-                    intentos_procesamiento=1,
-                    nombre_extraido=datos_ocr.get('nombre_extraido'),
-                    apellido_paterno_extraido=datos_ocr.get('apellido_paterno_extraido'),
-                    apellido_materno_extraido=datos_ocr.get('apellido_materno_extraido'),
-                    curp_extraida=datos_ocr.get('curp_extraida'),
-                    clave_electoral_extraida=datos_ocr.get('clave_electoral_extraida'),
-                    cic_extraido=datos_ocr.get('cic_extraido'),
-                    ocr_id_cr_extraido=datos_ocr.get('ocr_id_cr_extraido'),
-                    fecha_nacimiento_extraida=datos_ocr.get('fecha_nacimiento_extraida'),
-                    sexo_extraido=datos_ocr.get('sexo_extraido'),
-                    vigencia_extraida=datos_ocr.get('vigencia_extraida'),
-                    confianza_ocr=datos_ocr.get('confianza_ocr'),
-                    respuesta_ocr_completa=datos_ocr.get('respuesta_ocr_completa'),
-                )
-
-                self._crear_log(
-                    documento=documento,
-                    estado_anterior=None,
-                    estado_nuevo=estado_completado,
-                    mensaje='Documento validado y guardado correctamente.',
-                    tiempo_ms=datos_ocr.get('tiempo_procesamiento_ms')
-                )
-
-                resultados.append({'ok': True, 'documento': documento})
-
-                if tipo_doc_actual == 'INE_FRONTAL':
-                    doc_frontal_id = documento.id
-                elif tipo_doc_actual == 'INE_TRASERA':
-                    doc_trasera_id = documento.id
-
-        campos_usuario = []
-        if doc_frontal_id is not None:
-            request.user.imagen_ine_frontal_url = str(doc_frontal_id)
-            campos_usuario.append('imagen_ine_frontal_url')
-        if doc_trasera_id is not None:
-            request.user.imagen_ine_trasera_url = str(doc_trasera_id)
-            campos_usuario.append('imagen_ine_trasera_url')
-        if campos_usuario:
-            request.user.save(update_fields=campos_usuario)
-
-        status_code = status.HTTP_201_CREATED if all(r['ok'] for r in resultados) else status.HTTP_207_MULTI_STATUS
-        response_payload = {
-            'detail': 'Documentos OCR procesados y guardados correctamente.',
-            'documentos': DocumentoOCRSerializer([r['documento'] for r in resultados], many=True).data,
-            'resumen': {
-                'total': len(resultados),
-                'exitosos': len([r for r in resultados if r['ok']]),
-                'fallidos': len([r for r in resultados if not r['ok']]),
-                'errores': [
-                    {'documento_id': r['documento'].id, 'error': r['error']}
-                    for r in resultados if not r['ok']
-                ]
-            }
-        }
-        return Response(response_payload, status=status_code)
+        resultados = resultado['resultados']
+        status_code = status.HTTP_201_CREATED if len(resultados) == len(archivos_a_procesar) else status.HTTP_207_MULTI_STATUS
+        return Response({
+            'detail': 'Documentos procesados.',
+            'documentos': DocumentoOCRSerializer(resultados, many=True).data,
+            'resumen': {'total': len(resultados), 'exitosos': len(resultados), 'fallidos': 0, 'errores': []}
+        }, status=status_code)
 
 
 @extend_schema_view(
