@@ -257,12 +257,13 @@ class DonacionSerializer(serializers.ModelSerializer):
     donador = UsuarioSerializer(source='id_donador', read_only=True)
     caso_titulo = serializers.CharField(source='id_caso.titulo', read_only=True)
     categoria = CategoriaSerializer(source='id_categoria', read_only=True)
+    beneficiario_id = serializers.IntegerField(source='id_caso.id_beneficiario.id', read_only=True)
     
     class Meta:
         model = Donaciones
         fields = [
             'id', 'estado_donacion',
-            'donador', 'caso_titulo', 'id_donador', 'id_caso',
+            'donador', 'caso_titulo', 'id_donador', 'id_caso', 'beneficiario_id',
             'fecha_compromiso', 'fecha_donacion',
             'mensaje_donador',
             'cantidad_donacion', 'descripcion_donacion', 
