@@ -284,8 +284,8 @@ class EvidenciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Evidencias
         fields = [
-            'id', 'titulo', 'descripcion', 'tipo_archivo',
-            'ruta_archivo', 'usuario', 'caso', 'id_usuario',
+            'id', 'titulo', 'descripcion', 
+            'usuario', 'caso', 'id_usuario',
             'id_caso', 'fecha_creacion', 'es_publico',
             'imagen1', 'imagen2'
         ]

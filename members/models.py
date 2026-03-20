@@ -231,8 +231,6 @@ class Evidencias(models.Model):
     id_usuario = models.ForeignKey(Usuarios, on_delete=models.PROTECT, db_column='idUsuario')
     titulo = models.CharField(max_length=200)
     descripcion = models.TextField(null=True, blank=True)
-    tipo_archivo = models.CharField(max_length=20, null=True, blank=True)
-    ruta_archivo = models.CharField(max_length=500)
     imagen1 = models.TextField(max_length=500, null=True, blank=True)
     imagen2 = models.TextField(max_length=500, null=True, blank=True)
     fecha_creacion = models.DateTimeField(default=timezone.now)
